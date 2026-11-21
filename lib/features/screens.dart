@@ -1,0 +1,2013 @@
+import 'dart:async';
+
+// Retain compatibility with Flutter versions before the Material package split.
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+
+import '../main.dart';
+import '../data/repository.dart';
+
+class Portal extends ConsumerStatefulWidget {
+  final String page;
+  const Portal({super.key, required this.page});
+  @override
+  ConsumerState<Portal> createState() => _PortalState();
+}
+
+class _PortalState extends ConsumerState<Portal> {
+  String query = '', filter = 'All';
+  int onboarding = 0, week = 0;
+  DateTime day = DateTime(2026, 11, 26);
+  bool weekly = false;
+  final number = TextEditingController(text: 'LD80001'),
+      password = TextEditingController(text: 'Demo123!');
+  bool obscure = true, remember = true;
+  String? error;
+  MockRepository get r => ref.read(repositoryProvider);
+  void go(String page) {
+    setState(() {
+      query = '';
+      filter = 'All';
+    });
+    context.go('/$page');
+  }
+
+  @override
+  void dispose() {
+    number.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  void toast(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  Future<bool> confirm(String title) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(title),
+          content: const Text(
+            'This changes only the local demonstration data on this device.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+  Future<String?> input(String title, {String hint = 'Enter details'}) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: InputDecoration(labelText: hint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(c, controller.text.trim());
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    return result;
+  }
+
+  Future<void> detail(String title, Widget content) => showDialog(
+        context: context,
+        builder: (c) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680, maxHeight: 740),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(title,
+                            style: Theme.of(c).textTheme.titleLarge),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(c),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Flexible(child: SingleChildScrollView(child: content)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+  Widget panel(String title, Widget child, {String? eyebrow}) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (eyebrow != null)
+                Text(
+                  eyebrow,
+                  style: const TextStyle(
+                    color: Color(0xff2563eb),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 18),
+              child,
+            ],
+          ),
+        ),
+      );
+  Widget tile(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback action, {
+    Widget? trailing,
+  }) =>
+      ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xffeff6ff),
+          child: Icon(icon, color: const Color(0xff2563eb)),
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 14),
+        onTap: action,
+      );
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(repositoryProvider);
+    if (r.state['onboarded'] != true) return intro();
+    if (r.state['session'] == null) return login();
+    final wide = MediaQuery.sizeOf(context).width >= 768;
+    final nav = ['home', 'subjects', 'calendar', 'messages', 'profile'];
+    final selected = nav.indexOf(widget.page);
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const CircleAvatar(
+              backgroundColor: Color(0xff14213d),
+              child: Text(
+                'LD',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(
+              MockRepository.school.displayName,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+            )),
+            if (MediaQuery.sizeOf(context).width > 1000) ...[
+              const SizedBox(width: 20),
+              const Chip(label: Text('LEARNER PORTAL')),
+            ],
+          ],
+        ),
+        actions: [
+          const Chip(
+            label: Text('Demonstration', style: TextStyle(fontSize: 11)),
+          ),
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () => go('notifications'),
+            icon: Badge(
+              isLabelVisible: r.value('notificationsRead', false) != true,
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
+      body: Row(
+        children: [
+          if (wide)
+            NavigationRail(
+              extended: MediaQuery.sizeOf(context).width > 1150,
+              selectedIndex: selected < 0 ? null : selected,
+              onDestinationSelected: (i) => go(nav[i]),
+              leading: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'YOUR WORKSPACE',
+                  style: TextStyle(fontSize: 10, letterSpacing: 2),
+                ),
+              ),
+              destinations: List.generate(
+                5,
+                (i) => NavigationRailDestination(
+                  icon: Icon(
+                    [
+                      Icons.dashboard_outlined,
+                      Icons.auto_stories_outlined,
+                      Icons.calendar_month_outlined,
+                      Icons.forum_outlined,
+                      Icons.person_outline,
+                    ][i],
+                  ),
+                  label: Text(
+                    ['Home', 'Subjects', 'Calendar', 'Messages', 'Profile'][i],
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                setState(() {});
+                toast('Your offline workspace is up to date');
+              },
+              child: ListView(
+                padding: EdgeInsets.all(wide ? 32 : 16),
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1240),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          content(),
+                          const SizedBox(height: 36),
+                          const Text(
+                            'Optimal Growth Technologies SA · Offline demonstration\nFictional records. Not an endorsed school service.',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: wide
+          ? null
+          : NavigationBar(
+              selectedIndex: selected < 0 ? 0 : selected,
+              onDestinationSelected: (i) => go(nav[i]),
+              destinations: List.generate(
+                5,
+                (i) => NavigationDestination(
+                  icon: Icon(
+                    [
+                      Icons.home_outlined,
+                      Icons.menu_book,
+                      Icons.calendar_month,
+                      Icons.chat_bubble_outline,
+                      Icons.person_outline,
+                    ][i],
+                  ),
+                  label: [
+                    'Home',
+                    'Subjects',
+                    'Calendar',
+                    'Messages',
+                    'Profile',
+                  ][i],
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget intro() => Scaffold(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircleAvatar(
+                    radius: 45,
+                    backgroundColor: Color(0xff14213d),
+                    child: Text(
+                      'LD',
+                      style: TextStyle(color: Colors.white, fontSize: 32),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    MockRepository.school.displayName,
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 30),
+                  Icon(
+                    [Icons.menu_book, Icons.forum, Icons.insights][onboarding],
+                    size: 80,
+                    color: const Color(0xff2563eb),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    [
+                      'Your learning, all together',
+                      'Stay connected to your school',
+                      'Make progress every day',
+                    ][onboarding],
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    [
+                      'Explore lessons, original study guides and homework offline.',
+                      'Follow announcements and school-controlled demonstration conversations.',
+                      'Track your learning, plan your week and bring your creativity to life.',
+                    ][onboarding],
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 30),
+                  FilledButton(
+                    onPressed: () {
+                      if (onboarding < 2) {
+                        setState(() => onboarding++);
+                      } else {
+                        r.setValue('onboarded', true);
+                      }
+                    },
+                    child: Text(onboarding == 2 ? 'Get started' : 'Next'),
+                  ),
+                  TextButton(
+                    onPressed: () => r.setValue('onboarded', true),
+                    child: const Text('Skip introduction'),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('Powered by OG Technologies SA'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+  Widget login() => Scaffold(
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: panel(
+                'Welcome back',
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Sign in to your learner workspace. Accounts are managed by the school.',
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: number,
+                      decoration: const InputDecoration(
+                        labelText: 'Learner number',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: password,
+                      obscureText: obscure,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(() => obscure = !obscure),
+                          icon: Icon(
+                            obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+                    CheckboxListTile(
+                      value: remember,
+                      onChanged: (v) => setState(() => remember = v!),
+                      title: const Text('Remember me'),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                    if (error != null)
+                      Text(error!, style: const TextStyle(color: Colors.red)),
+                    FilledButton(
+                      onPressed: () async {
+                        final ok = await r.signIn(
+                          number.text.trim(),
+                          password.text,
+                          remember,
+                        );
+                        if (!ok) {
+                          setState(
+                            () => error =
+                                'Invalid learner number or password. Try a demo account below.',
+                          );
+                        }
+                      },
+                      child: const Text('Sign in'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final id = await input(
+                          'Password recovery',
+                          hint: 'Learner number',
+                        );
+                        if (id != null && mounted) {
+                          detail(
+                            'Recovery request',
+                            const Text(
+                              'Demonstration only: no request has been sent. In a live service, contact your school account administrator. Demo password: Demo123!',
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Forgot password?'),
+                    ),
+                    const Divider(),
+                    const Text('DEMO ACCOUNT SELECTOR'),
+                    const Text('Password for all accounts: Demo123!'),
+                    Wrap(
+                      spacing: 8,
+                      children: [8, 9, 10]
+                          .map(
+                            (g) => ActionChip(
+                              label: Text('Grade $g'),
+                              onPressed: () {
+                                number.text =
+                                    g == 10 ? 'LD10001' : 'LD${g}0001';
+                                password.text = 'Demo123!';
+                                r.signIn(number.text, password.text, remember);
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
+                eyebrow: 'LUCKY DUBE · DEMONSTRATION',
+              ),
+            ),
+          ),
+        ),
+      );
+  Widget heading(String title, String subtitle) => Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(subtitle, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+  Widget content() {
+    switch (widget.page) {
+      case 'home':
+        return home();
+      case 'subjects':
+        return catalogue();
+      case 'calendar':
+        return calendar();
+      case 'messages':
+        return messages();
+      case 'profile':
+        return profile();
+      case 'settings':
+        return settings();
+      case 'resources':
+      case 'homework':
+      case 'assessments':
+      case 'results':
+        return catalogue();
+      case 'timetable':
+        return timetable();
+      case 'attendance':
+        return attendance();
+      case 'announcements':
+        return announcements();
+      case 'performing-arts':
+        return arts();
+      case 'notifications':
+        return notifications();
+      case 'support':
+        return support();
+      default:
+        return heading(
+          'Page not found',
+          'Use the navigation to return to your workspace.',
+        );
+    }
+  }
+
+  Widget home() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading(
+            'Good morning, ${r.learner.name.split(' ').first} 👋',
+            'Thursday, 26 November 2026  •  Grade ${r.learner.grade} ${r.learner.group}  •  Term 4',
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: const Color(0xff14213d),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'A LITTLE PROGRESS, EVERY DAY',
+                  style: TextStyle(
+                    color: Color(0xfffbbf24),
+                    fontSize: 11,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Your next chapter\nstarts here.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Learn with purpose. Create with confidence.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 22),
+                FilledButton(
+                  onPressed: () => go('subjects'),
+                  child: const Text('Continue learning  →'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          LayoutBuilder(
+            builder: (c, b) => Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                stat(
+                  'Learning progress',
+                  '${r.completed}/${r.content('Lesson').length}',
+                  'Lessons completed',
+                  b.maxWidth,
+                ),
+                stat('Attendance', '96%', '48 of 50 school days', b.maxWidth),
+                stat(
+                  'Homework',
+                  '${r.content('Assignment').length - r.submitted}',
+                  'Tasks to complete',
+                  b.maxWidth,
+                ),
+                stat(
+                  'Published average',
+                  '76%',
+                  'Term 4 • demonstration',
+                  b.maxWidth,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          panel(
+            'Your learning toolkit',
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: MockRepository.school.modules
+                  .where((s) => s != 'Subjects')
+                  .map(
+                    (s) => ActionChip(
+                      avatar: const Icon(Icons.arrow_outward, size: 16),
+                      label: Text(s),
+                      onPressed: () => go(slug(s)),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          panel(
+            'Up next',
+            Column(
+              children: [
+                tile(
+                  'Mathematics • Patterns and relationships',
+                  '10:15–11:00 • Room B2 • ${MockRepository.teachers[2]}',
+                  Icons.functions,
+                  () => go('timetable'),
+                ),
+                tile(
+                  'Creative showcase rehearsal',
+                  '14:30 • Performing arts studio',
+                  Icons.theater_comedy_outlined,
+                  () => go('performing-arts'),
+                ),
+              ],
+            ),
+          ),
+          panel(
+            'Stay on track',
+            Column(
+              children: [
+                tile(
+                  'Term 4 tasks',
+                  '${r.submitted} submitted • deadlines 27–30 November',
+                  Icons.task_alt,
+                  () => go('homework'),
+                ),
+                tile(
+                  'End-of-year creative showcase',
+                  'Pinned • Performing arts • 26 November',
+                  Icons.campaign_outlined,
+                  () => go('announcements'),
+                ),
+                tile(
+                  'Your school conversations',
+                  'Staff and moderated groups',
+                  Icons.chat_outlined,
+                  () => go('messages'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+  String slug(String s) =>
+      {
+        'Homework': 'homework',
+        'Assessments': 'assessments',
+        'Performing arts': 'performing-arts',
+      }[s] ??
+      s.toLowerCase();
+  Widget stat(String title, String value, String sub, double width) => SizedBox(
+        width: width < 550 ? (width - 12) / 2 : (width - 36) / 4,
+        child: panel(
+          value,
+          Text(sub, style: const TextStyle(fontSize: 12)),
+          eyebrow: title,
+        ),
+      );
+  Widget search(List<String> filters) => Column(
+        children: [
+          TextField(
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Search your workspace',
+            ),
+            onChanged: (v) => setState(() => query = v.toLowerCase()),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            children: filters
+                .map(
+                  (f) => ChoiceChip(
+                    label: Text(f),
+                    selected: filter == f,
+                    onSelected: (_) => setState(() => filter = f),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+      );
+  Widget catalogue() {
+    final kind = {
+      'resources': 'Resource',
+      'homework': 'Assignment',
+      'assessments': 'Quiz',
+      'results': 'Result',
+    }[widget.page];
+    final subjectMode = kind == null;
+    final list = subjectMode
+        ? r.subjects(r.learner.grade)
+        : r.content(kind).map((e) => e.title).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading(
+          subjectMode
+              ? 'Your subjects'
+              : {
+                  'Resource': 'Learning library',
+                  'Assignment': 'Homework & assignments',
+                  'Quiz': 'Practice assessments',
+                  'Result': 'Academic results',
+                }[kind]!,
+          subjectMode
+              ? 'Your configured demonstration subjects • Term 4'
+              : 'Offline demonstration content • Grade ${r.learner.grade}',
+        ),
+        if (kind == 'Result')
+          panel(
+            '76% published average',
+            Column(
+              children: [
+                for (var t = 1; t <= 4; t++)
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        Text('Term $t  '),
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: (68 + t * 2) / 100,
+                          ),
+                        ),
+                        Text(' ${68 + t * 2}%'),
+                      ],
+                    ),
+                  ),
+                TextButton(
+                  onPressed: () => detail(
+                    'Unofficial report preview',
+                    Text(
+                      '${r.learner.name}\nGrade ${r.learner.grade} • 2026\n\nDEMONSTRATION DATA — NOT AN OFFICIAL SCHOOL REPORT\n\n${r.subjects(r.learner.grade).map((s) => '$s: 76%').join('\n')}',
+                    ),
+                  ),
+                  child: const Text('Preview unofficial report'),
+                ),
+              ],
+            ),
+          ),
+        search(
+          kind == 'Assignment'
+              ? ['All', 'Upcoming', 'Submitted', 'Overdue', 'Marked']
+              : ['All', 'Term 4', 'Saved'],
+        ),
+        ...list.where((s) => s.toLowerCase().contains(query)).where((s) {
+          if (subjectMode) return filter != 'Saved';
+          final e = r.content(kind).firstWhere((e) => e.title == s);
+          if (filter == 'Saved') {
+            return r.value('saved-${e.id}', false) == true;
+          }
+          if (kind == 'Assignment') {
+            final submitted = (r.value(e.id, {}) as Map)['submitted'] == true;
+            if (filter == 'Submitted') return submitted;
+            if (filter == 'Upcoming') return !submitted;
+            if (filter == 'Marked' || filter == 'Overdue') return false;
+          }
+          return true;
+        }).map((s) {
+          if (subjectMode) {
+            return Card(
+              child: tile(
+                s,
+                '${MockRepository.teachers[r.subjects(r.learner.grade).indexOf(s) % 12]} • ${r.completed} lessons complete\n1 pending task • Latest result 76% • Next lesson 10:15',
+                Icons.auto_stories,
+                () => subject(s),
+              ),
+            );
+          }
+          final e = r.content(kind).firstWhere((e) => e.title == s);
+          return Card(
+            child: tile(
+              e.title,
+              '${e.subject} • Term ${e.term}${kind == 'Assignment' ? ' • Due 27 Nov, 16:00 • ${(r.value(e.id, {}) as Map)['submitted'] == true ? 'Submitted' : 'Upcoming'}' : ''}',
+              kind == 'Resource'
+                  ? Icons.description_outlined
+                  : kind == 'Quiz'
+                      ? Icons.quiz_outlined
+                      : Icons.task_outlined,
+              () => openItem(e),
+            ),
+          );
+        }),
+        if (list.where((s) => s.toLowerCase().contains(query)).isEmpty)
+          const Text('No matching content. Try another search.'),
+      ],
+    );
+  }
+
+  void subject(String subject) => detail(
+        subject,
+        Column(
+          children: [
+            const Text('Term 4 • Consolidation and creative application'),
+            for (final kind in [
+              'Lesson',
+              'Resource',
+              'Assignment',
+              'Quiz',
+              'Result',
+            ])
+              ...r.content(kind).where((e) => e.subject == subject).map(
+                    (e) => tile(
+                        e.title, kind, Icons.arrow_forward, () => openItem(e)),
+                  ),
+            tile('Class discussions', 'School-moderated channel', Icons.forum,
+                () {
+              Navigator.pop(context);
+              go('messages');
+            }),
+          ],
+        ),
+      );
+  Future<void> openItem(LearningItem e) async {
+    if (e.kind == 'Assignment') {
+      await showDialog(
+        context: context,
+        builder: (c) => AssignmentDialog(item: e, repo: r),
+      );
+      return;
+    }
+    if (e.kind == 'Quiz') {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => QuizDialog(item: e, repo: r),
+      );
+      return;
+    }
+    r.put('recent-${e.id}', true);
+    await detail(
+      e.title,
+      StatefulBuilder(
+        builder: (c, update) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${e.subject} • Term ${e.term} • Original local demonstration material',
+            ),
+            const SizedBox(height: 20),
+            if (e.kind == 'Result')
+              const Text(
+                'Published • 26 November 2026\n38 / 50 • 76%\nTeacher feedback: Clear reasoning. Show each step to improve accuracy.\nRead-only published assessment record.',
+              ),
+            if (e.kind != 'Result') Text(e.body),
+            const SizedBox(height: 24),
+            if (e.kind == 'Lesson')
+              FilledButton.icon(
+                onPressed: () {
+                  r.put(e.id, true);
+                  update(() {});
+                },
+                icon: const Icon(Icons.check),
+                label: Text(
+                  r.value(e.id, false) == true
+                      ? 'Completed'
+                      : 'Mark as complete',
+                ),
+              ),
+            if (e.kind == 'Resource') ...[
+              const Text(
+                'Text revision guide • Bundled offline • 2 KB\nDemonstration preview: this original guide is available without a PDF or video service.',
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      r.put(
+                        'saved-${e.id}',
+                        !(r.value('saved-${e.id}', false) as bool),
+                      );
+                      update(() {});
+                    },
+                    icon: const Icon(Icons.bookmark_outline),
+                    label: Text(
+                      r.value('saved-${e.id}', false) == true
+                          ? 'Bookmarked'
+                          : 'Bookmark',
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      update(() => filter = 'Downloading');
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 600),
+                      );
+                      r.put('download-${e.id}', true);
+                      update(() => filter = 'All');
+                    },
+                    icon: const Icon(Icons.download),
+                    label: Text(
+                      filter == 'Downloading'
+                          ? 'Downloading…'
+                          : r.value('download-${e.id}', false) == true
+                              ? 'Available offline'
+                              : 'Download for offline',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget timetable() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading(
+            'Your timetable',
+            '${r.learner.group} • Week ${48 + week} • Africa/Johannesburg',
+          ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => setState(() => week--),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Text(
+                  'Week of ${DateTime(2026, 11, 23).add(Duration(days: week * 7)).day}/${DateTime(2026, 11, 23).add(Duration(days: week * 7)).month}'),
+              IconButton(
+                onPressed: () => setState(() => week++),
+                icon: const Icon(Icons.chevron_right),
+              ),
+              FilterChip(
+                label: const Text('Weekly'),
+                selected: weekly,
+                onSelected: (v) => setState(() => weekly = v),
+              ),
+            ],
+          ),
+          for (final d in weekly
+              ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+              : ['Thursday'])
+            panel(
+              d,
+              Column(
+                children: [
+                  for (var i = 0; i < 6; i++)
+                    tile(
+                      i == 2
+                          ? 'Break'
+                          : r.subjects(r.learner.grade)[
+                              i % r.subjects(r.learner.grade).length],
+                      '${8 + i}:15 – ${9 + i}:00 • ${i == 2 ? 'Courtyard' : 'Room B${i + 1} • ${MockRepository.teachers[i]}'}',
+                      i == 2 ? Icons.coffee : Icons.schedule,
+                      () => detail(
+                        'Schedule details',
+                        Text(
+                          'Grade ${r.learner.grade} • ${r.learner.group}\n${i == 2 ? 'Break period' : 'Bring your workbook. Topic: term consolidation. Teacher: ${MockRepository.teachers[i]}'}',
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      );
+  Widget attendance() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading('Attendance', 'Read-only demonstration school records'),
+          panel(
+            '96% attendance',
+            const Text(
+              '48 present • 2 absent • 3 late arrivals\n50 recorded school days',
+            ),
+          ),
+          panel(
+            'November 2026',
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: List.generate(
+                30,
+                (i) => Tooltip(
+                  message: i == 9
+                      ? 'Absent'
+                      : i == 16
+                          ? 'Late'
+                          : 'Present',
+                  child: CircleAvatar(
+                    backgroundColor: i == 9
+                        ? Colors.red.shade100
+                        : i == 16
+                            ? Colors.amber.shade100
+                            : Colors.green.shade100,
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          tile(
+            'Explain an absence',
+            'Private demonstration request • awaiting staff review',
+            Icons.edit_note,
+            () async {
+              final text = await input('Absence explanation');
+              if (text != null) {
+                r.put('absence', text);
+                toast('Saved locally • Awaiting simulated staff review');
+              }
+            },
+          ),
+          panel(
+            'Attendance history',
+            const Text(
+              '10 Nov • Absent\n17 Nov • Late, 08:12\n24 Nov • Present\n25 Nov • Present\n26 Nov • Present',
+            ),
+          ),
+        ],
+      );
+  static const events = [
+    'Creative showcase rehearsal',
+    'Mathematics revision session',
+    'Term 4 assignment deadline',
+    'Parent feedback meeting',
+    'End-of-year performance',
+    'School holiday planning',
+  ];
+  Widget calendar() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading('Your calendar', 'Plan your learning and creative practice'),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => setState(
+                  () => day = DateTime(day.year, day.month - 1, day.day),
+                ),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: Text(
+                  '${day.year} / ${day.month}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(
+                  () => day = DateTime(day.year, day.month + 1, day.day),
+                ),
+                icon: const Icon(Icons.chevron_right),
+              ),
+              FilterChip(
+                label: const Text('Week'),
+                selected: weekly,
+                onSelected: (v) => setState(() => weekly = v),
+              ),
+            ],
+          ),
+          search(['All', 'Academic', 'Performing arts']),
+          panel(
+            weekly ? 'Selected week' : 'Month overview',
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisExtent: 48,
+              ),
+              itemCount: weekly ? 7 : DateTime(day.year, day.month + 1, 0).day,
+              itemBuilder: (c, i) {
+                final n = weekly ? day.day - day.weekday + i + 1 : i + 1;
+                return TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor:
+                        n == day.day ? const Color(0xff2563eb) : null,
+                    foregroundColor: n == day.day ? Colors.white : null,
+                  ),
+                  onPressed: () =>
+                      setState(() => day = DateTime(day.year, day.month, n)),
+                  child: Text('$n'),
+                );
+              },
+            ),
+          ),
+          panel(
+            '${day.day} / ${day.month} • Agenda',
+            Column(
+              children: [
+                ...events
+                    .where((e) => e.toLowerCase().contains(query))
+                    .where(
+                      (e) =>
+                          filter == 'All' ||
+                          (filter == 'Academic'
+                              ? !e.contains('showcase') &&
+                                  !e.contains('performance')
+                              : e.contains('showcase') ||
+                                  e.contains('performance')),
+                    )
+                    .map(
+                      (e) => tile(
+                        e,
+                        '${day.day}/${day.month}/${day.year} • 14:30 • Demonstration event',
+                        Icons.event,
+                        () => detail(
+                          e,
+                          const Text(
+                            'School-managed demonstration event. Location: Arts studio / school hall. Bring your learning materials and arrive ten minutes early.',
+                          ),
+                        ),
+                      ),
+                    ),
+                ...List<String>.from(r.value('reminders', <String>[])).map(
+                  (e) => tile(
+                    e,
+                    'Personal reminder',
+                    Icons.alarm,
+                    () => detail('Personal reminder', Text(e)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              final text = await input('Add personal reminder');
+              if (text != null) {
+                r.put('reminders', [
+                  ...List<String>.from(r.value('reminders', <String>[])),
+                  '${day.day}/${day.month}: $text',
+                ]);
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Personal reminder'),
+          ),
+        ],
+      );
+  Widget announcements() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading(
+            'Announcement centre',
+            'News for Grade ${r.learner.grade} and the school community',
+          ),
+          search(
+              ['All', 'General', 'Academic', 'Performing arts', 'Important']),
+          for (final e in [
+            'Creative showcase • Pinned',
+            'Term 4 study guidance',
+            'Examination preparation',
+            'School closing arrangements',
+            'Important learner safety notice',
+          ].where((e) => e.toLowerCase().contains(query)))
+            Card(
+              child: tile(
+                e,
+                '${MockRepository.teachers[0]} • 25 Nov 2026 • ${r.value('read-$e', false) == true ? 'Read' : 'Unread'}',
+                Icons.campaign_outlined,
+                () {
+                  r.put('read-$e', true);
+                  detail(
+                    e,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Please prepare your learning materials for the final activities of Term 4. Learners should follow the published timetable and speak to their class teacher if they need support.\n\nThis announcement is fictional and is not an official school notice.',
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            r.put('bookmark-$e', true);
+                            toast('Announcement bookmarked');
+                          },
+                          child: const Text('Bookmark announcement'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      );
+  Widget messages() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading(
+              'Messages', 'School-controlled channels • Simulated responses'),
+          search(['All']),
+          for (final channel in [
+            '${MockRepository.teachers[0]} • Class teacher',
+            '${r.learner.group} • Moderated class group',
+            'Mathematics discussion',
+            'Performing arts ensemble',
+          ].where((e) => e.toLowerCase().contains(query)))
+            Card(
+              child: tile(
+                channel,
+                'Tap to open your authorised conversation',
+                Icons.forum_outlined,
+                () => showDialog(
+                  context: context,
+                  builder: (c) => ChatDialog(channel: channel, repo: r),
+                ),
+              ),
+            ),
+        ],
+      );
+  Widget arts() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading(
+            'The performing arts centre',
+            'Find your voice. Develop your craft. Share your creativity.',
+          ),
+          panel(
+            'On stage • Creative futures',
+            const Text(
+              '26 November 2026 • 14:30\nFinal ensemble rehearsal • Arts studio\nUpcoming production: Voices of Tomorrow • 30 November',
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            children: MockRepository.school.disciplines
+                .map(
+                  (e) => ActionChip(
+                    label: Text(e),
+                    onPressed: () => detail(
+                      e,
+                      Text(
+                        '$e practice studio\n\nWarm up safely, rehearse a short original sequence and reflect on expression, timing and collaboration.\n\nEducator feedback: Strong commitment. Practise transitions and support your ensemble.',
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          panel(
+            'Performance preparation',
+            Column(
+              children: [
+                for (final e in [
+                  'Warm-up completed',
+                  'Materials prepared',
+                  'Rehearsal notes reviewed',
+                  'Creative work ready',
+                ])
+                  CheckboxListTile(
+                    title: Text(e),
+                    value: r.value(e, false) as bool,
+                    onChanged: (v) => r.put(e, v),
+                  ),
+                TextButton(
+                  onPressed: () {
+                    r.put('rehearsal-request', true);
+                    toast(
+                      'Rehearsal attendance request recorded locally; awaiting review',
+                    );
+                  },
+                  child:
+                      const Text('Request rehearsal attendance confirmation'),
+                ),
+              ],
+            ),
+          ),
+          panel(
+            'Your private portfolio',
+            Column(
+              children: [
+                const Text('Private by default • never publicly published'),
+                ...List<String>.from(r.value('portfolio', <String>[])).map(
+                  (e) => tile(
+                    e,
+                    'Original creative work • Private',
+                    Icons.palette_outlined,
+                    () => detail('Portfolio project', Text(e)),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () async {
+                    final title = await input(
+                      'Add creative project',
+                      hint: 'Project title and description',
+                    );
+                    if (title == null) return;
+                    final files = await FilePicker.platform.pickFiles(
+                      type: FileType.media,
+                    );
+                    r.put('portfolio', [
+                      ...List<String>.from(r.value('portfolio', <String>[])),
+                      '$title${files == null ? '' : '\nMedia: ${files.names.join(', ')}'}',
+                    ]);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add creative project'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+  Widget notifications() {
+    final list = [
+      ...List<String>.from(r.value('notifications', <String>[])),
+      'New Term 4 assignments',
+      'Published results available',
+      'Creative showcase rehearsal reminder',
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading('Notifications', 'Local in-app updates'),
+        TextButton(
+          onPressed: () => r.put('notificationsRead', true),
+          child: const Text('Mark all as read'),
+        ),
+        for (final n in list.where((n) => r.value('dismiss-$n', false) != true))
+          Card(
+            child: tile(
+              n,
+              r.value('notificationsRead', false) == true ? 'Read' : 'Unread',
+              Icons.notifications_outlined,
+              () => go(
+                n.contains('result')
+                    ? 'results'
+                    : n.contains('rehearsal')
+                        ? 'performing-arts'
+                        : 'homework',
+              ),
+              trailing: IconButton(
+                tooltip: 'Dismiss notification',
+                onPressed: () => r.put('dismiss-$n', true),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget profile() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading('Your profile', 'Official learner details are read-only'),
+          panel(
+            r.learner.name,
+            Text(
+              '${r.learner.id} • Grade ${r.learner.grade} • ${r.learner.group}\n${MockRepository.school.name}\nAcademic year 2026 • Class teacher ${MockRepository.teachers[0]}\nAttendance: 96%\n\nEnrolled subjects: ${r.subjects(r.learner.grade).join(', ')}',
+            ),
+          ),
+          for (final s in [
+            'Resources',
+            'Performing arts',
+            'Settings',
+            'Support'
+          ])
+            tile(
+              s,
+              s == 'Resources' ? 'Saved and downloaded materials' : 'Open $s',
+              Icons.arrow_outward,
+              () => go(slug(s)),
+            ),
+          tile(
+            'Privacy & about',
+            'Developer, ownership and demonstration information',
+            Icons.privacy_tip_outlined,
+            () => detail(
+              'About Lucky Dube',
+              Text(
+                '${MockRepository.school.owner}\n\nIndependent demonstration. No school endorsement is implied. All learners and teachers are fictional. Data stays in local device storage; do not enter sensitive information. No backend, advertising, payments or external APIs.',
+              ),
+            ),
+          ),
+          TextButton(
+              onPressed: () => r.logout(), child: const Text('Sign out')),
+        ],
+      );
+  Widget settings() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading('Settings', 'Make this workspace yours'),
+          panel(
+            'Appearance & accessibility',
+            Column(
+              children: [
+                DropdownButtonFormField<int>(
+                  initialValue: (r.state['theme'] as int?) ?? 0,
+                  items: const [
+                    DropdownMenuItem(value: 0, child: Text('System theme')),
+                    DropdownMenuItem(value: 1, child: Text('Light mode')),
+                    DropdownMenuItem(value: 2, child: Text('Dark mode')),
+                  ],
+                  onChanged: (v) => r.setValue('theme', v),
+                ),
+                const SizedBox(height: 16),
+                const Text('Text size'),
+                Slider(
+                  value: (r.state['textScale'] as num?)?.toDouble() ?? 1,
+                  min: 1,
+                  max: 1.5,
+                  divisions: 5,
+                  onChanged: (v) => r.setValue('textScale', v),
+                ),
+                SwitchListTile(
+                  title: const Text('Local notification preferences'),
+                  value: r.value('notificationPreference', true) as bool,
+                  onChanged: (v) => r.put('notificationPreference', v),
+                ),
+              ],
+            ),
+          ),
+          panel(
+            'Demonstration accounts',
+            Wrap(
+              spacing: 8,
+              children: [8, 9, 10]
+                  .map(
+                    (g) => ActionChip(
+                      label: Text('Grade $g'),
+                      onPressed: () => r.signIn(
+                        g == 10 ? 'LD10001' : 'LD${g}0001',
+                        'Demo123!',
+                        true,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          tile(
+            'Download management',
+            'Remove locally marked downloads',
+            Icons.download,
+            () async {
+              if (await confirm('Clear downloaded material markers?')) {
+                r.state.removeWhere((k, v) => k.contains('download-'));
+                await r.save();
+                setState(() {});
+              }
+            },
+          ),
+          tile(
+            'Clear local cache',
+            'Clear recently viewed resources',
+            Icons.cleaning_services,
+            () async {
+              if (await confirm('Clear recently viewed history?')) {
+                r.state.removeWhere((k, v) => k.contains('recent-'));
+                await r.save();
+                setState(() {});
+              }
+            },
+          ),
+          tile(
+            'Reset demonstration data',
+            'Removes sessions, submissions and local preferences',
+            Icons.restart_alt,
+            () async {
+              if (await confirm('Reset all demonstration data?')) {
+                await r.reset();
+              }
+            },
+          ),
+        ],
+      );
+  Widget support() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading('Help & learner safety', 'Support for your learning journey'),
+          panel(
+            'Need help right now?',
+            const Text(
+              'For real emergencies, contact a responsible adult or appropriate emergency service immediately. This demonstration cannot deliver reports to staff or emergency services.',
+            ),
+          ),
+          for (final q in [
+            'How do I sign in?',
+            'Can I learn offline?',
+            'How do I submit homework?',
+            'Who can read my portfolio?',
+          ])
+            ExpansionTile(
+              title: Text(q),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    {
+                      'How do I sign in?':
+                          'Use your provided learner number and Demo123!; no self-registration is available.',
+                      'Can I learn offline?':
+                          'All original guides and demonstration content are bundled locally.',
+                      'How do I submit homework?':
+                          'Open Homework, select a task, enter your response and submit. Drafts stay on this device.',
+                      'Who can read my portfolio?':
+                          'Your demonstration portfolio is private and stored on this device.',
+                    }[q]!,
+                  ),
+                ),
+              ],
+            ),
+          panel(
+            'Report a concern • Private simulation',
+            Column(
+              children: [
+                for (final cat in [
+                  'Bullying',
+                  'Harassment',
+                  'Academic concerns',
+                  'Safety concerns',
+                  'Inappropriate communication',
+                  'Technical issues',
+                ])
+                  tile(
+                    cat,
+                    'Save a private simulated support request',
+                    Icons.support_agent,
+                    () async {
+                      final body = await input(
+                        cat,
+                        hint:
+                            'Describe your concern (avoid sensitive personal data)',
+                      );
+                      if (body != null) {
+                        final id =
+                            'LD-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+                        r.put('concern-$id', {'category': cat, 'body': body});
+                        if (mounted) {
+                          detail(
+                            'Request $id',
+                            const Text(
+                              'Saved privately on this device only. This has NOT been delivered to real school staff or emergency services. Speak directly to a responsible adult for real support.',
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      );
+}
+
+class AssignmentDialog extends StatefulWidget {
+  final LearningItem item;
+  final MockRepository repo;
+  const AssignmentDialog({super.key, required this.item, required this.repo});
+  @override
+  State<AssignmentDialog> createState() => _AssignmentDialogState();
+}
+
+class _AssignmentDialogState extends State<AssignmentDialog> {
+  late final TextEditingController response;
+  List<String> files = [];
+  bool submitted = false;
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.repo.value(widget.item.id, {}) as Map;
+    response = TextEditingController(text: saved['response'] as String?);
+    files = List<String>.from(saved['files'] ?? []);
+    submitted = saved['submitted'] == true;
+  }
+
+  @override
+  void dispose() {
+    response.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(widget.item.title),
+        content: SizedBox(
+          width: 580,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or a local attachment. Resubmission is permitted.',
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: response,
+                  maxLines: 5,
+                  decoration:
+                      const InputDecoration(labelText: 'Written response'),
+                ),
+                for (final f in files)
+                  ListTile(
+                    title: Text(f),
+                    trailing: IconButton(
+                      onPressed: () => setState(() => files.remove(f)),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final selected = await FilePicker.platform.pickFiles(
+                      allowMultiple: true,
+                      withData: false,
+                    );
+                    if (selected != null) {
+                      setState(
+                        () => files.addAll(selected.names.whereType<String>()),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.attach_file),
+                  label: const Text('Select local attachments'),
+                ),
+                if (submitted)
+                  const Text(
+                    'Submission received locally • Awaiting marking.\nTeacher feedback will appear after simulated review.',
+                  ),
+                ...List<dynamic>.from(
+                  (widget.repo.value(widget.item.id, {}) as Map)['history'] ??
+                      [],
+                ).map((e) => Text('$e')),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              widget.repo.put(widget.item.id, {
+                'response': response.text,
+                'files': files,
+                'submitted': submitted,
+              });
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(
+                  const SnackBar(content: Text('Draft saved locally')));
+            },
+            child: const Text('Save draft'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (response.text.trim().isEmpty && files.isEmpty) return;
+              widget.repo.submit(widget.item.id, response.text, files);
+              setState(() => submitted = true);
+            },
+            child: Text(submitted ? 'Resubmit' : 'Submit assignment'),
+          ),
+        ],
+      );
+}
+
+class QuizDialog extends StatefulWidget {
+  final LearningItem item;
+  final MockRepository repo;
+  const QuizDialog({super.key, required this.item, required this.repo});
+  @override
+  State<QuizDialog> createState() => _QuizDialogState();
+}
+
+class _QuizDialogState extends State<QuizDialog> {
+  int index = 0, seconds = 300;
+  bool done = false;
+  final answers = [-1, -1, -1];
+  final flags = <int>{};
+  Timer? timer;
+  final written = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (seconds <= 1) {
+        finish();
+      } else {
+        setState(() => seconds--);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    written.dispose();
+    super.dispose();
+  }
+
+  void finish() {
+    timer?.cancel();
+    widget.repo.put('quiz-${widget.item.id}', MockRepository.score(answers));
+    widget.repo.notify('Practice quiz completed');
+    setState(() => done = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final questions = [
+      'Which approach best supports reliable learning?',
+      'True or false: checking your work can reveal mistakes.',
+      'Which is the strongest evidence for a conclusion?',
+      'Explain how you would apply this idea to your subject.',
+    ];
+    final options = [
+      ['Copy without checking', 'Practise and reflect', 'Guess quickly'],
+      ['True', 'False'],
+      [
+        'A rumour',
+        'An unsupported opinion',
+        'A worked example and clear reasoning',
+      ],
+    ];
+    return AlertDialog(
+      title: Text(done ? 'Practice completion summary' : widget.item.title),
+      content: SizedBox(
+        width: 560,
+        child: SingleChildScrollView(
+          child: done
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${MockRepository.score(answers)} / 3 objective marks • ${(MockRepository.score(answers) / 3 * 100).round()}%',
+                    ),
+                    const Text(
+                      'Written response: pending simulated marking. Practice only; this does not alter official published records.',
+                    ),
+                    for (var i = 0; i < 3; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          '${i + 1}. ${answers[i] == [
+                                1,
+                                0,
+                                2
+                              ][i] ? 'Correct' : 'Incorrect'} • ${options[i][[
+                            1,
+                            0,
+                            2
+                          ][i]]}\nExplanation: reliable learning uses practice, verification and evidence.',
+                        ),
+                      ),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Practice only • 1 mark per objective question\n${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')} remaining • Question ${index + 1} of 4',
+                    ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(value: (index + 1) / 4),
+                    const SizedBox(height: 16),
+                    Text(questions[index]),
+                    if (index < 3)
+                      for (var i = 0; i < options[index].length; i++)
+                        ListTile(
+                          leading: Icon(answers[index] == i
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked),
+                          onTap: () => setState(() => answers[index] = i),
+                          title: Text(options[index][i]),
+                        ),
+                    if (index == 3)
+                      TextField(
+                        controller: written,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Written answer • manual marking',
+                        ),
+                      ),
+                    FilterChip(
+                      label: const Text('Flag for review'),
+                      selected: flags.contains(index),
+                      onSelected: (v) => setState(() {
+                        if (v) {
+                          flags.add(index);
+                        } else {
+                          flags.remove(index);
+                        }
+                      }),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+      actions: done
+          ? [
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ]
+          : [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Exit practice'),
+              ),
+              if (index > 0)
+                TextButton(
+                  onPressed: () => setState(() => index--),
+                  child: const Text('Previous'),
+                ),
+              if (index < 3)
+                FilledButton(
+                  onPressed: () => setState(() => index++),
+                  child: const Text('Next'),
+                ),
+              if (index == 3)
+                FilledButton(
+                  onPressed: () async {
+                    final yes = await showDialog<bool>(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: const Text('Submit practice quiz?'),
+                        content: Text(
+                          '${answers.where((a) => a < 0).length} unanswered objective questions. ${flags.length} flagged for review.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: const Text('Review'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: const Text('Submit'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (yes == true) finish();
+                  },
+                  child: const Text('Submit quiz'),
+                ),
+            ],
+    );
+  }
+}
+
+class ChatDialog extends StatefulWidget {
+  final String channel;
+  final MockRepository repo;
+  const ChatDialog({super.key, required this.channel, required this.repo});
+  @override
+  State<ChatDialog> createState() => _ChatDialogState();
+}
+
+class _ChatDialogState extends State<ChatDialog> {
+  final text = TextEditingController();
+  bool muted = false;
+  @override
+  void dispose() {
+    text.dispose();
+    super.dispose();
+  }
+
+  void send(String body) {
+    final key = 'chat-${widget.channel}';
+    final list = List<String>.from(widget.repo.value(key, <String>[]));
+    list.add('You • 10:20\n$body\nDelivered locally');
+    list.add(
+      'Educator • 10:21 • Simulated response\nThank you for your message. Review the study guide and bring your questions to our next lesson.',
+    );
+    widget.repo.put(key, list);
+    widget.repo.notify('New simulated educator reply');
+    text.clear();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(widget.channel),
+        content: SizedBox(
+          width: 600,
+          height: 440,
+          child: Column(
+            children: [
+              const Text(
+                '26 November 2026 • School-authorised demonstration channel',
+              ),
+              Expanded(
+                child: ListView(
+                  children: [
+                    const ListTile(
+                      title: Text('Educator • 08:00'),
+                      subtitle: Text(
+                        'Welcome! Please keep discussions respectful and focused on learning.',
+                      ),
+                    ),
+                    for (final m in List<String>.from(
+                      widget.repo.value('chat-${widget.channel}', <String>[]),
+                    ))
+                      Card(
+                        color: m.startsWith('You')
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(m),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              TextField(
+                controller: text,
+                decoration: const InputDecoration(
+                  labelText: 'Reply to this channel',
+                ),
+                onSubmitted: (v) {
+                  if (v.trim().isNotEmpty) send(v);
+                },
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Share attachment',
+                    onPressed: () async {
+                      final f = await FilePicker.platform.pickFiles();
+                      if (f != null) {
+                        send('Demonstration attachment: ${f.names.join(', ')}');
+                      }
+                    },
+                    icon: const Icon(Icons.attach_file),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      muted = !muted;
+                      widget.repo.put('mute-${widget.channel}', muted);
+                      setState(() {});
+                    },
+                    child: Text(muted ? 'Unmute' : 'Mute'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      widget.repo.put('reported-${widget.channel}', true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Report saved locally only. Contact a responsible adult for real support.',
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Report'),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Send message',
+                    onPressed: () {
+                      if (text.text.trim().isNotEmpty) send(text.text.trim());
+                    },
+                    icon: const Icon(Icons.send),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      );
+}
