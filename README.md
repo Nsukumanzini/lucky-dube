@@ -61,4 +61,7 @@ See docs/VALIDATION.md for actual execution results and docs/FEATURE_CHECKLIST.m
 
 ## Vercel web deployment
 
-Vercel serves the tested `web-dist/` release bundle. No server, APIs or credentials are needed. To update it, run `flutter build web --release --no-web-resources-cdn`, replace `web-dist/` with `build/web/`, then commit both source and the release bundle. Pushes deploy through the linked Vercel project. The GitHub repository is private; the deployed demo is accessible using its Vercel production URL subject to account deployment protection.
+Vercel serves the tested `web-dist/` release bundle. No server, APIs or credentials are needed. To update it, run `flutter build web --release --no-web-resources-cdn`, replace `web-dist/` with `build/web/`, then commit both source and the release bundle. Git-based automatic deployment is pending GitHub repository creation and connection. The current release was deployed directly through the connected Vercel API. The GitHub repository is private; the deployed demo is accessible using its Vercel production URL subject to account deployment protection.
+
+Live production demo: https://lucky-dube.vercel.app/
+See docs/DEPLOYMENT.md for deployment status and the pending GitHub step.
