@@ -29,11 +29,11 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final repo = MockRepository(prefs);
     repo.setLanguage('zu');
-    await repo.signIn('LD80001', 'Demo123!', true);
+    await repo.signIn('LD80001', 'Learn123!', true);
     expect(repo.language, 'zu');
-    await repo.signIn('LD90001', 'Demo123!', true);
+    await repo.signIn('LD90001', 'Learn123!', true);
     repo.setLanguage('en');
-    await repo.signIn('LD80001', 'Demo123!', true);
+    await repo.signIn('LD80001', 'Learn123!', true);
     expect(repo.language, 'zu');
     await repo.save();
     expect(MockRepository(prefs).language, 'zu');
@@ -84,7 +84,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final repo = MockRepository(await SharedPreferences.getInstance());
       repo.setValue('onboarded', true);
-      await repo.signIn('LD80001', 'Demo123!', true);
+      await repo.signIn('LD80001', 'Learn123!', true);
       repo.setLanguage('zu');
       await tester.pumpWidget(ProviderScope(
           overrides: [repositoryProvider.overrideWith((ref) => repo)],

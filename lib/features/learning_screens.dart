@@ -388,7 +388,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const LText(
-                'Clear reasoning. Show each step to improve accuracy. This published demonstration record is read-only.')
+                'Clear reasoning. Show each step to improve accuracy. This learning record is read-only.')
           ] else ...[
             LText(
                 e.kind == 'Lesson'
@@ -407,7 +407,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                     padding: const EdgeInsets.all(20),
                     child: LText(e.kind == 'Lesson'
                         ? 'Reflect: explain one idea you learned and one question you would like to ask in class.'
-                        : 'Text guide • Bundled locally • Demonstration preview\nAll content on this screen is available without an external document or video service.'))),
+                        : 'Text guide • Available on this device\nAll content on this screen is available without an external document or video service.'))),
             if (downloading)
               const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -559,7 +559,7 @@ class SubjectScreen extends ConsumerWidget {
                   ]),
                 ListView(children: [
                   const LText(
-                      'Discuss learning with your school-authorised group. Demonstration educator responses are clearly labelled.'),
+                      'Discuss learning in your assigned group. Automated practice replies are clearly labelled.'),
                   const SizedBox(height: 20),
                   FilledButton.icon(
                       onPressed: () => context.push(

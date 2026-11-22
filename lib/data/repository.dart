@@ -17,7 +17,7 @@ class SchoolConfiguration {
     this.owner = 'Optimal Growth Technologies SA',
     this.language = 'English',
     this.languages = const ['en', 'zu'],
-    this.contact = 'Demonstration support only',
+    this.contact = 'Application support',
     this.logoAsset = 'assets/icon.svg',
     this.primaryColor = 0xff14213d,
     this.secondaryColor = 0xff2563eb,
@@ -159,7 +159,7 @@ class MockRepository extends LearnerRepository {
                                 : '$subject term assessment',
                 subject,
                 kind,
-                'Learning objective: explain key ideas, apply them to a real example and reflect on your method.\n\n1. Read the question carefully and identify what is known.\n2. Describe the principle in your own words.\n3. Work through an example and check your answer.\n\nOriginal demonstration material by Optimal Growth Technologies SA. No textbook content is reproduced.',
+                'Learning objective: explain key ideas, apply them to a real example and reflect on your method.\n\n1. Read the question carefully and identify what is known.\n2. Describe the principle in your own words.\n3. Work through an example and check your answer.\n\nOriginal learning material by Optimal Growth Technologies SA. No textbook content is reproduced.',
                 grade,
               ),
       ];
@@ -182,7 +182,8 @@ class MockRepository extends LearnerRepository {
 
   @override
   Future<bool> signIn(String id, String password, bool remember) async {
-    if (!learners.any((l) => l.id == id) || password != 'Demo123!') {
+    if (!learners.any((l) => l.id == id) ||
+        !const ['Learn123!', 'Demo123!'].contains(password)) {
       return false;
     }
     state['session'] = id;

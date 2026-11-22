@@ -10,15 +10,15 @@ void main() {
   });
   test('only configured credentials can start a session', () async {
     expect(await repo.signIn('LD80001', 'wrong', true), false);
-    expect(await repo.signIn('LD80001', 'Demo123!', true), true);
+    expect(await repo.signIn('LD80001', 'Learn123!', true), true);
     expect(repo.learner.grade, 8);
   });
   test('grade switching scopes content and submissions', () async {
-    await repo.signIn('LD80001', 'Demo123!', true);
+    await repo.signIn('LD80001', 'Learn123!', true);
     final id = repo.content('Assignment').first.id;
     repo.submit(id, 'My response', []);
     expect(repo.submitted, 1);
-    await repo.signIn('LD90001', 'Demo123!', true);
+    await repo.signIn('LD90001', 'Learn123!', true);
     expect(repo.submitted, 0);
     expect(repo.content('Resource').every((e) => e.grade == 9), true);
   });

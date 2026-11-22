@@ -15,7 +15,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final repo = MockRepository(await SharedPreferences.getInstance());
     repo.setValue('onboarded', true);
-    await repo.signIn('LD80001', 'Demo123!', true);
+    await repo.signIn('LD80001', 'Learn123!', true);
     await tester.pumpWidget(ProviderScope(
         overrides: [repositoryProvider.overrideWith((ref) => repo)],
         child: const LuckyApp()));

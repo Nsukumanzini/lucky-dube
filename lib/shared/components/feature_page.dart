@@ -87,7 +87,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 12),
                     const LText(
-                        'Your information is saved only in this offline demonstration.'),
+                        'Your information is saved on this device only.'),
                     const SizedBox(height: 28),
                     TextFormField(
                         controller: controller,

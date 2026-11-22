@@ -14,15 +14,15 @@ flutter run -d chrome
 
 Platform scaffolding for Android, iOS, web and Windows is included. No API keys, backend, remote fonts or runtime API requests are used. Package installation requires internet; the installed application does not. For web, use --no-web-resources-cdn so rendering assets are served locally; initial web installation still requires the local server.
 
-## Demo credentials
+## Sign-in credentials
 
 | Grade | Learner number | Password |
 |---|---|---|
-| 8 | LD80001 | Demo123! |
-| 9 | LD90001 | Demo123! |
-| 10 | LD10001 | Demo123! |
+| 8 | LD80001 | Learn123! |
+| 9 | LD90001 | Learn123! |
+| 10 | LD10001 | Learn123! |
 
-Use the demo selector on login for instant sign-in. Settings also switches accounts. Remember me restores a session. Settings → Reset demonstration data clears all locally saved state after confirmation. School-managed records are read-only. All dates displayed in the demo refer to South African school activities in November 2026.
+Use Quick sign-in on the login screen. Settings also switches accounts. Remember me restores a session. Settings → Reset local information clears all locally saved state after confirmation. School-managed records are read-only. All dates displayed in the demo refer to South African school activities in November 2026.
 
 ## Demonstration walkthrough
 
@@ -83,3 +83,7 @@ Choose **English** or **isiZulu** from the language control before sign-in, in t
 Flutter's offline localization delegates translate built-in controls. Application text is maintained in `lib/app/localization/zu.json`, with a generated Dart catalogue (`python3 tool/generate_catalog.py`, then `dart format lib/app/localization/catalog.dart`). English source labels remain canonical for routes, IDs, filtering and scoring. Exact translations are preferred; composed labels use single-pass phrase translation with names, learner numbers and numeric values preserved. Unknown authored content falls back to its original language. Learner-written chat messages and attachment filenames are never automatically translated. No translation API or internet connection is used.
 
 The catalogue includes UI controls, demonstration lesson instructions, quiz questions, support guidance and school notices. Have an isiZulu-speaking educator review terminology and school-specific wording before wider school use; external learning materials should be authored and reviewed in their intended language rather than treated as automatically translated curriculum.
+
+## Learner-facing wording
+
+Visible status labels have been removed from the learner interface. Quick sign-in uses Learn123!; the previous access password remains accepted for compatibility. Local-only storage, non-delivery notices and the unofficial report label remain accurate. Internal mock repository classes and the legacy preference key are retained to preserve existing data and development architecture.

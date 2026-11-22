@@ -1,5 +1,5 @@
 name: lucky_dube_learner
-description: Offline learner demonstration by Optimal Growth Technologies SA.
+description: Offline learner application by Optimal Growth Technologies SA.
 publish_to: none
 version: 1.0.0+1
 environment:

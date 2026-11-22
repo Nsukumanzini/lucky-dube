@@ -26,3 +26,7 @@ Feature details and entry forms now use complete pages with app bars, back navig
 ## English / isiZulu language option — 22 November 2026
 
 28 tests pass. Added catalogue and parameter checks, language persistence/account isolation, pre-login language selection, short-mobile onboarding and isiZulu navigation/detail layouts at 360, 390, 768, 1024 and 1440 pixels. Fixed an overflowing theme dropdown exposed by longer isiZulu labels. Flutter framework localizations and the application catalogue are bundled offline. No external translation service is used. Unknown authored resources keep their source language; school terminology should be reviewed by an isiZulu-speaking educator.
+
+## Learner-facing copy update — 22 November 2026
+
+Removed the status badge and presentation wording from application screens, resources and public web metadata in both languages. Added regression checks for prohibited interface labels. The current quick-sign-in password is Learn123!; the previous password is accepted for compatibility. Local-storage keys and mock repository internals are deliberately unchanged so existing learner data is retained. Local-only and non-delivery notices, practice assessment labels and unofficial report status remain explicit.

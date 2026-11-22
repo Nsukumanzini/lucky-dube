@@ -26,7 +26,7 @@ class _PortalState extends ConsumerState<Portal> {
   DateTime day = DateTime(2026, 11, 26);
   bool weekly = false;
   final number = TextEditingController(text: 'LD80001'),
-      password = TextEditingController(text: 'Demo123!');
+      password = TextEditingController(text: 'Learn123!');
   bool obscure = true, remember = true;
   String? error;
   MockRepository get r => ref.read(repositoryProvider);
@@ -53,7 +53,7 @@ class _PortalState extends ConsumerState<Portal> {
         builder: (c) => AlertDialog(
           title: LText(title),
           content: const LText(
-            'This changes only the local demonstration data on this device.',
+            'This changes only the information saved on this device.',
           ),
           actions: [
             TextButton(
@@ -151,10 +151,6 @@ class _PortalState extends ConsumerState<Portal> {
         ),
         actions: [
           const LanguageSelector(),
-          if (MediaQuery.sizeOf(context).width >= 600)
-            const Chip(
-              label: LText('Demonstration', style: TextStyle(fontSize: 11)),
-            ),
           IconButton(
             tooltip: tr(context, 'Notifications'),
             onPressed: () => go('notifications'),
@@ -216,7 +212,7 @@ class _PortalState extends ConsumerState<Portal> {
                           content(),
                           const SizedBox(height: 36),
                           const LText(
-                            'Optimal Growth Technologies SA · Offline demonstration\nFictional records. Not an endorsed school service.',
+                            'Optimal Growth Technologies SA',
                             style: TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                         ],
@@ -306,7 +302,7 @@ class _PortalState extends ConsumerState<Portal> {
                   LText(
                     [
                       'Explore lessons, original study guides and homework offline.',
-                      'Follow announcements and school-controlled demonstration conversations.',
+                      'Follow announcements and school-managed conversations.',
                       'Track your learning, plan your week and bring your creativity to life.',
                     ][onboarding],
                     textAlign: TextAlign.center,
@@ -390,7 +386,7 @@ class _PortalState extends ConsumerState<Portal> {
                         if (!ok) {
                           setState(
                             () => error =
-                                'Invalid learner number or password. Try a demo account below.',
+                                'Invalid learner number or password. Check your details or choose a learner profile below.',
                           );
                         }
                       },
@@ -406,7 +402,7 @@ class _PortalState extends ConsumerState<Portal> {
                           detail(
                             'Recovery request',
                             const LText(
-                              'Demonstration only: no request has been sent. In a live service, contact your school account administrator. Demo password: Demo123!',
+                              'No recovery request has been sent. Contact your school account administrator for assistance. Access password: Learn123!',
                             ),
                           );
                         }
@@ -414,8 +410,8 @@ class _PortalState extends ConsumerState<Portal> {
                       child: const LText('Forgot password?'),
                     ),
                     const Divider(),
-                    const LText('DEMO ACCOUNT SELECTOR'),
-                    const LText('Password for all accounts: Demo123!'),
+                    const LText('QUICK SIGN-IN'),
+                    const LText('Password for all accounts: Learn123!'),
                     Wrap(
                       spacing: 8,
                       children: [8, 9, 10]
@@ -425,7 +421,7 @@ class _PortalState extends ConsumerState<Portal> {
                               onPressed: () {
                                 number.text =
                                     g == 10 ? 'LD10001' : 'LD${g}0001';
-                                password.text = 'Demo123!';
+                                password.text = 'Learn123!';
                                 r.signIn(number.text, password.text, remember);
                               },
                             ),
@@ -434,7 +430,7 @@ class _PortalState extends ConsumerState<Portal> {
                     ),
                   ],
                 ),
-                eyebrow: 'LUCKY DUBE · DEMONSTRATION',
+                eyebrow: 'LUCKY DUBE · LEARNER PORTAL',
               ),
             ),
           ),
@@ -526,7 +522,7 @@ class _PortalState extends ConsumerState<Portal> {
                 stat(
                   'Published average',
                   '76%',
-                  'Term 4 • demonstration',
+                  'Term 4',
                   b.maxWidth,
                 ),
               ],
@@ -704,8 +700,8 @@ class _PortalState extends ConsumerState<Portal> {
                   'Result': 'Academic results',
                 }[kind]!,
           subjectMode
-              ? 'Your configured demonstration subjects • Term 4'
-              : 'Offline demonstration content • Grade ${r.learner.grade}',
+              ? 'Your enrolled subjects • Term 4'
+              : 'Learning content • Grade ${r.learner.grade}',
         ),
         if (kind == 'Result')
           panel(
@@ -731,7 +727,7 @@ class _PortalState extends ConsumerState<Portal> {
                   onPressed: () => detail(
                     'Unofficial report preview',
                     LText(
-                      '${r.learner.name}\nGrade ${r.learner.grade} • 2026\n\nDEMONSTRATION DATA — NOT AN OFFICIAL SCHOOL REPORT\n\n${r.subjects(r.learner.grade).map((s) => '$s: 76%').join('\n')}',
+                      '${r.learner.name}\nGrade ${r.learner.grade} • 2026\n\nUNOFFICIAL LEARNING SUMMARY — NOT AN OFFICIAL SCHOOL REPORT\n\n${r.subjects(r.learner.grade).map((s) => '$s: 76%').join('\n')}',
                     ),
                   ),
                   child: const LText('Preview unofficial report'),
@@ -850,7 +846,7 @@ class _PortalState extends ConsumerState<Portal> {
   Widget attendance() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          heading('Attendance', 'Read-only demonstration school records'),
+          heading('Attendance', 'Attendance overview • Read-only'),
           panel(
             '96% attendance',
             const LText(
@@ -887,7 +883,7 @@ class _PortalState extends ConsumerState<Portal> {
           ),
           tile(
             'Explain an absence',
-            'Private demonstration request • awaiting staff review',
+            'Private request • Saved on this device; not delivered',
             Icons.edit_note,
             () async {
               final text = await input('Absence explanation');
@@ -988,12 +984,12 @@ class _PortalState extends ConsumerState<Portal> {
                     .map(
                       (e) => tile(
                         e,
-                        '${day.day}/${day.month}/${day.year} • 14:30 • Demonstration event',
+                        '${day.day}/${day.month}/${day.year} • 14:30 • School activity',
                         Icons.event,
                         () => detail(
                           e,
                           const LText(
-                            'School-managed demonstration event. Location: Arts studio / school hall. Bring your learning materials and arrive ten minutes early.',
+                            'School activity. Location: Arts studio / school hall. Bring your learning materials and arrive ten minutes early.',
                           ),
                         ),
                       ),
@@ -1227,12 +1223,12 @@ class _PortalState extends ConsumerState<Portal> {
             ),
           tile(
             'Privacy & about',
-            'Developer, ownership and demonstration information',
+            'Developer, ownership and application information',
             Icons.privacy_tip_outlined,
             () => detail(
               'About Lucky Dube',
               LText(
-                '${MockRepository.school.owner}\n\nIndependent demonstration. No school endorsement is implied. All learners and teachers are fictional. Data stays in local device storage; do not enter sensitive information. No backend, advertising, payments or external APIs.',
+                '${MockRepository.school.owner}\n\nDeveloped and owned by Optimal Growth Technologies SA. No school endorsement is implied. Learner and teacher profiles are fictional. Information is stored on this device; do not enter sensitive personal information. Messages and requests are not delivered to school staff.',
               ),
             ),
           ),
@@ -1277,7 +1273,7 @@ class _PortalState extends ConsumerState<Portal> {
             ),
           ),
           panel(
-            'Demonstration accounts',
+            'Learner profiles',
             Wrap(
               spacing: 8,
               children: [8, 9, 10]
@@ -1286,7 +1282,7 @@ class _PortalState extends ConsumerState<Portal> {
                       label: LText('Grade $g'),
                       onPressed: () => r.signIn(
                         g == 10 ? 'LD10001' : 'LD${g}0001',
-                        'Demo123!',
+                        'Learn123!',
                         true,
                       ),
                     ),
@@ -1319,11 +1315,11 @@ class _PortalState extends ConsumerState<Portal> {
             },
           ),
           tile(
-            'Reset demonstration data',
+            'Reset local information',
             'Removes sessions, submissions and local preferences',
             Icons.restart_alt,
             () async {
-              if (await confirm('Reset all demonstration data?')) {
+              if (await confirm('Reset all local information?')) {
                 await r.reset();
               }
             },
@@ -1337,7 +1333,7 @@ class _PortalState extends ConsumerState<Portal> {
           panel(
             'Need help right now?',
             const LText(
-              'For real emergencies, contact a responsible adult or appropriate emergency service immediately. This demonstration cannot deliver reports to staff or emergency services.',
+              'For real emergencies, contact a responsible adult or appropriate emergency service immediately. Reports saved here are not delivered to staff or emergency services.',
             ),
           ),
           for (final q in [
@@ -1354,13 +1350,13 @@ class _PortalState extends ConsumerState<Portal> {
                   child: LText(
                     {
                       'How do I sign in?':
-                          'Use your provided learner number and Demo123!; no self-registration is available.',
+                          'Use your provided learner number and Learn123!; no self-registration is available.',
                       'Can I learn offline?':
-                          'All original guides and demonstration content are bundled locally.',
+                          'Learning guides and resources are available on this device.',
                       'How do I submit homework?':
                           'Open Homework, select a task, enter your response and submit. Drafts stay on this device.',
                       'Who can read my portfolio?':
-                          'Your demonstration portfolio is private and stored on this device.',
+                          'Your portfolio is private and stored on this device.',
                     }[q]!,
                   ),
                 ),

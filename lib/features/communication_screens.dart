@@ -74,7 +74,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                   SizedBox(height: 6),
                   LText(
-                      'Staff-managed channels and moderated groups. All educator replies here are simulated for the demonstration.',
+                      'Staff-managed channels and moderated groups. Educator replies here are automated practice responses.',
                       style: TextStyle(height: 1.5))
                 ]))
           ])),
@@ -184,7 +184,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                       LText(
                                           messages.isEmpty
                                               ? 'Start a conversation'
-                                              : 'Latest reply • Demonstration',
+                                              : 'Latest activity',
                                           style: const TextStyle(
                                               fontSize: 11,
                                               color: Color(0xff64748b))),
@@ -230,10 +230,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final list = List<String>.from(widget.repo.value(key, <String>[]));
     list.add('You • 10:20\n${body.trim()}\nDelivered locally');
     list.add(
-        'Educator • 10:21 • Simulated response\nThank you for your message. Review the study guide and bring your questions to our next lesson.');
+        'Educator • 10:21 • Automated practice reply\nThank you for your message. Review the study guide and bring your questions to our next lesson.');
     widget.repo.put(key, list);
     widget.repo.put('read-${widget.channel}', false);
-    widget.repo.notify('New simulated educator reply');
+    widget.repo.notify('New automated practice reply');
     text.clear();
     setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -328,7 +328,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                           const SizedBox(width: 10),
                           const Expanded(
                               child: LText(
-                                  'Demonstration channel • Educator replies are simulated',
+                                  'Practice channel • Automated replies',
                                   style: TextStyle(fontSize: 12))),
                           if (muted)
                             const Icon(Icons.notifications_off_outlined,
@@ -373,7 +373,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                           await FilePicker.platform.pickFiles();
                                       if (files != null && mounted) {
                                         send(
-                                            'Demonstration attachment: ${files.names.join(', ')}');
+                                            'Attachment: ${files.names.join(', ')}');
                                       }
                                     },
                                     icon: const Icon(
@@ -414,8 +414,11 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final sent = message.startsWith('You');
     final parts = message.split('\n');
-    final body =
-        parts.skip(1).where((s) => s != 'Delivered locally').join('\n');
+    final body = parts
+        .skip(1)
+        .where((s) => s != 'Delivered locally')
+        .join('\n')
+        .replaceFirst('Demonstration attachment:', 'Attachment:');
     return Padding(
         padding: const EdgeInsets.only(bottom: 18),
         child: Align(
@@ -437,9 +440,10 @@ class MessageBubble extends StatelessWidget {
                               child: LText(
                                   sent
                                       ? 'You'
-                                      : parts.first.contains('Simulated')
-                                          ? 'Educator • Simulated response'
-                                          : 'Educator • Demonstration',
+                                      : (parts.first.contains('Simulated') ||
+                                              parts.first.contains('Automated'))
+                                          ? 'Educator • Automated practice reply'
+                                          : 'Educator',
                                   style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -466,8 +470,7 @@ class MessageBubble extends StatelessWidget {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (body.startsWith(
-                                        'Demonstration attachment:'))
+                                    if (body.startsWith('Attachment:'))
                                       Icon(Icons.insert_drive_file_outlined,
                                           color: sent
                                               ? Colors.white
