@@ -15,6 +15,12 @@ class LuckyApp extends ConsumerStatefulWidget {
 }
 
 class _LuckyAppState extends ConsumerState<LuckyApp> {
+  @override
+  void initState() {
+    super.initState();
+    GoRouter.optionURLReflectsImperativeAPIs = true;
+  }
+
   late final router = GoRouter(
     initialLocation: '/home',
     redirect: (context, state) =>
