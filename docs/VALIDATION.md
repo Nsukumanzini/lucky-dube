@@ -18,3 +18,7 @@ Tests verify implemented prototype behavior, not full compliance with the reques
 Feature details and entry forms now use complete pages with app bars, back navigation and responsive action areas. Dedicated GoRouter paths cover subject workspaces, learning items and authorised conversations. Other supporting details and entry forms use Navigator page routes. Only destructive-action confirmations and practice-quiz submit confirmation remain modal.
 
 17 tests pass, including full-screen subject/lesson/resource/assignment/quiz/result/conversation navigation at all five viewport sizes, assignment drafts/submission, lesson completion, chat persistence, unauthorised content rejection and input validation. Existing mock-data and production-scope limitations in FEATURE_CHECKLIST.md still apply.
+
+## Light visual and communication refresh — 22 November 2026
+
+19 tests pass, including the existing five-viewport workflow coverage plus light-theme defaults and staff/group inbox filtering at 360px with enlarged text. Static analysis is clean. Illustrations are original local vector artwork; no external assets or recurring animation tickers were introduced. Reduced-motion settings suppress the welcome transition and hover animation. Dark/system themes remain optional in Settings after the initial light migration.

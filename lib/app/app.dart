@@ -54,7 +54,7 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
       title: 'Lucky Dube',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      themeMode: ThemeMode.values[(repo.state['theme'] as int?) ?? 0],
+      themeMode: ThemeMode.values[(repo.state['theme'] as int?) ?? 1],
       theme: theme(Brightness.light),
       darkTheme: theme(Brightness.dark),
       builder: (context, child) => MediaQuery(
@@ -74,12 +74,23 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xff2563eb),
           brightness: b,
-        ),
+        ).copyWith(
+            primary: const Color(0xff2563eb),
+            onPrimary: Colors.white,
+            surface:
+                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            onSurface: b == Brightness.light
+                ? const Color(0xff22334b)
+                : const Color(0xffedf4ff),
+            primaryContainer: b == Brightness.light
+                ? const Color(0xffeaf3ff)
+                : const Color(0xff214675)),
         scaffoldBackgroundColor: b == Brightness.light
-            ? const Color(0xfff8fafc)
+            ? const Color(0xfff7faff)
             : const Color(0xff0f172a),
         cardTheme: CardThemeData(
           elevation: 0,
+          color: b == Brightness.light ? Colors.white : const Color(0xff18253a),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
             side: BorderSide(
@@ -91,11 +102,27 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
+          fillColor: b == Brightness.light
+              ? const Color(0xfff0f5fb)
+              : const Color(0xff22334b),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
         ),
-        appBarTheme: const AppBarTheme(centerTitle: false),
+        appBarTheme: AppBarTheme(
+            centerTitle: false,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor:
+                b == Brightness.light ? Colors.white : const Color(0xff18253a)),
+        navigationRailTheme: NavigationRailThemeData(
+            backgroundColor:
+                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            indicatorColor: const Color(0xffdcecff)),
+        navigationBarTheme: NavigationBarThemeData(
+            backgroundColor:
+                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            indicatorColor: const Color(0xffdcecff)),
       );
 }

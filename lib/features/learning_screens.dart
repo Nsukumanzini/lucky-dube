@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import '../data/repository.dart';
 import '../main.dart';
 import '../shared/components/feature_page.dart';
+import 'communication_screens.dart';
 
 class AssignmentScreen extends StatefulWidget {
   final LearningItem item;
@@ -312,139 +313,6 @@ class _QuizScreenState extends State<QuizScreen> {
             ],
     );
   }
-}
-
-class ConversationScreen extends StatefulWidget {
-  final String channel;
-  final MockRepository repo;
-  const ConversationScreen(
-      {super.key, required this.channel, required this.repo});
-  @override
-  State<ConversationScreen> createState() => _ConversationScreenState();
-}
-
-class _ConversationScreenState extends State<ConversationScreen> {
-  final text = TextEditingController();
-  bool muted = false;
-  @override
-  void initState() {
-    super.initState();
-    muted = widget.repo.value('mute-${widget.channel}', false) as bool;
-  }
-
-  @override
-  void dispose() {
-    text.dispose();
-    super.dispose();
-  }
-
-  void send(String body) {
-    final key = 'chat-${widget.channel}';
-    final list = List<String>.from(widget.repo.value(key, <String>[]));
-    list.add('You • 10:20\n$body\nDelivered locally');
-    list.add(
-      'Educator • 10:21 • Simulated response\nThank you for your message. Review the study guide and bring your questions to our next lesson.',
-    );
-    widget.repo.put(key, list);
-    widget.repo.notify('New simulated educator reply');
-    text.clear();
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) => FeaturePage(
-        title: Text(widget.channel),
-        scrollable: false,
-        content: Column(
-          children: [
-            const Text(
-              '26 November 2026 • School-authorised demonstration channel',
-            ),
-            Expanded(
-              child: ListView(
-                children: [
-                  const ListTile(
-                    title: Text('Educator • 08:00'),
-                    subtitle: Text(
-                      'Welcome! Please keep discussions respectful and focused on learning.',
-                    ),
-                  ),
-                  for (final m in List<String>.from(
-                    widget.repo.value('chat-${widget.channel}', <String>[]),
-                  ))
-                    Card(
-                      color: m.startsWith('You')
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(m),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            TextField(
-              controller: text,
-              decoration: const InputDecoration(
-                labelText: 'Reply to this channel',
-              ),
-              onSubmitted: (v) {
-                if (v.trim().isNotEmpty) send(v);
-              },
-            ),
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Share attachment',
-                  onPressed: () async {
-                    final f = await FilePicker.platform.pickFiles();
-                    if (f != null) {
-                      send('Demonstration attachment: ${f.names.join(', ')}');
-                    }
-                  },
-                  icon: const Icon(Icons.attach_file),
-                ),
-                TextButton(
-                  onPressed: () {
-                    muted = !muted;
-                    widget.repo.put('mute-${widget.channel}', muted);
-                    setState(() {});
-                  },
-                  child: Text(muted ? 'Unmute' : 'Mute'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    widget.repo.put('reported-${widget.channel}', true);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Report saved locally only. Contact a responsible adult for real support.',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('Report'),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Send message',
-                  onPressed: () {
-                    if (text.text.trim().isNotEmpty) send(text.text.trim());
-                  },
-                  icon: const Icon(Icons.send),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      );
 }
 
 class LearningRoute extends ConsumerWidget {

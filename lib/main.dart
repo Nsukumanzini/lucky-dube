@@ -14,6 +14,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final repo = MockRepository(prefs);
+  if (repo.state['lightRefreshV1'] != true) {
+    repo.state['theme'] = 1;
+    repo.state['lightRefreshV1'] = true;
+    await repo.save();
+  }
   if (repo.state['remember'] != true) repo.state.remove('session');
   runApp(
     ProviderScope(

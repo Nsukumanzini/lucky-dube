@@ -8,6 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import '../main.dart';
 import '../data/repository.dart';
 import '../shared/components/feature_page.dart';
+import '../shared/components/learner_visuals.dart';
+import 'communication_screens.dart';
 
 class Portal extends ConsumerStatefulWidget {
   final String page;
@@ -123,7 +125,7 @@ class _PortalState extends ConsumerState<Portal> {
         title: Row(
           children: [
             const CircleAvatar(
-              backgroundColor: Color(0xff14213d),
+              backgroundColor: Color(0xff2563eb),
               child: Text(
                 'LD',
                 style: TextStyle(
@@ -264,7 +266,7 @@ class _PortalState extends ConsumerState<Portal> {
                 children: [
                   const CircleAvatar(
                     radius: 45,
-                    backgroundColor: Color(0xff14213d),
+                    backgroundColor: Color(0xff2563eb),
                     child: Text(
                       'LD',
                       style: TextStyle(color: Colors.white, fontSize: 32),
@@ -491,46 +493,7 @@ class _PortalState extends ConsumerState<Portal> {
             'Good morning, ${r.learner.name.split(' ').first} 👋',
             'Thursday, 26 November 2026  •  Grade ${r.learner.grade} ${r.learner.group}  •  Term 4',
           ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: const Color(0xff14213d),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'A LITTLE PROGRESS, EVERY DAY',
-                  style: TextStyle(
-                    color: Color(0xfffbbf24),
-                    fontSize: 11,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Your next chapter\nstarts here.',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Learn with purpose. Create with confidence.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 22),
-                FilledButton(
-                  onPressed: () => go('subjects'),
-                  child: const Text('Continue learning  →'),
-                ),
-              ],
-            ),
-          ),
+          WelcomeBanner(onContinue: () => go('subjects')),
           const SizedBox(height: 20),
           LayoutBuilder(
             builder: (c, b) => Wrap(
@@ -630,14 +593,58 @@ class _PortalState extends ConsumerState<Portal> {
         'Performing arts': 'performing-arts',
       }[s] ??
       s.toLowerCase();
-  Widget stat(String title, String value, String sub, double width) => SizedBox(
+  Widget stat(String title, String value, String sub, double width) {
+    final index = [
+      'Learning progress',
+      'Attendance',
+      'Homework',
+      'Published average'
+    ].indexOf(title);
+    final accent = learnerAccents[index < 0 ? 0 : index];
+    return SizedBox(
         width: width < 550 ? (width - 12) / 2 : (width - 36) / 4,
-        child: panel(
-          value,
-          Text(sub, style: const TextStyle(fontSize: 12)),
-          eyebrow: title,
-        ),
-      );
+        child: Card(
+            child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                              color: accent.withValues(alpha: .12),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Icon(
+                              [
+                                Icons.auto_stories_outlined,
+                                Icons.check_circle_outline,
+                                Icons.edit_note_rounded,
+                                Icons.insights_rounded
+                              ][index < 0 ? 0 : index],
+                              size: 20,
+                              color: accent)),
+                      const SizedBox(height: 16),
+                      Text(title,
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: accent)),
+                      const SizedBox(height: 8),
+                      Text(value,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 8),
+                      Text(sub,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xff64748b),
+                              height: 1.5)),
+                    ]))));
+  }
+
   Widget search(List<String> filters) => Column(
         children: [
           TextField(
@@ -1053,29 +1060,7 @@ class _PortalState extends ConsumerState<Portal> {
             ),
         ],
       );
-  Widget messages() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          heading(
-              'Messages', 'School-controlled channels • Simulated responses'),
-          search(['All']),
-          for (final channel in [
-            '${MockRepository.teachers[0]} • Class teacher',
-            '${r.learner.group} • Moderated class group',
-            'Mathematics discussion',
-            'Performing arts ensemble',
-          ].where((e) => e.toLowerCase().contains(query)))
-            Card(
-              child: tile(
-                channel,
-                'Tap to open your authorised conversation',
-                Icons.forum_outlined,
-                () => context
-                    .push('/conversation/${Uri.encodeComponent(channel)}'),
-              ),
-            ),
-        ],
-      );
+  Widget messages() => const InboxScreen();
   Widget arts() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1254,7 +1239,7 @@ class _PortalState extends ConsumerState<Portal> {
             Column(
               children: [
                 DropdownButtonFormField<int>(
-                  initialValue: (r.state['theme'] as int?) ?? 0,
+                  initialValue: (r.state['theme'] as int?) ?? 1,
                   items: const [
                     DropdownMenuItem(value: 0, child: Text('System theme')),
                     DropdownMenuItem(value: 1, child: Text('Light mode')),
