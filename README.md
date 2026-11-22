@@ -65,3 +65,7 @@ Vercel serves the tested `web-dist/` release bundle. No server, APIs or credenti
 
 Live production demo: https://lucky-dube.vercel.app/
 See docs/DEPLOYMENT.md for deployment status and the pending GitHub step.
+
+## Screen-based feature navigation
+
+Subject workspaces provide seven tabs: overview, lessons, materials, assignments, assessments, results and discussions. Learning content and conversations open on dedicated routes that can be refreshed or linked directly after sign-in. Supporting details (events, announcements, portfolios, schedule entries, privacy and support receipts) and entry forms open as full pages with back navigation. Only short reset/delete and quiz-submission confirmations remain dialogs. Back navigation preserves local learner state; drafts are saved explicitly using Save draft.

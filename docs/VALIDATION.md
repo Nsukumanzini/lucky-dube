@@ -12,3 +12,9 @@ Provisioned Flutter 3.50.1 stable (ae9b586f34), Dart 3.14.0 in /workspace/flutte
 - `flutter build windows --release`: failed: `"build windows" only supported on Windows hosts.` Run on Windows with Visual Studio's desktop C++ workload.
 
 Tests verify implemented prototype behavior, not full compliance with the requested production acceptance criteria. See FEATURE_CHECKLIST.md. No real Android/iOS/Windows device tests or browser visual inspection were performed. No production deployment was made.
+
+## Full-screen navigation update — 22 November 2026
+
+Feature details and entry forms now use complete pages with app bars, back navigation and responsive action areas. Dedicated GoRouter paths cover subject workspaces, learning items and authorised conversations. Other supporting details and entry forms use Navigator page routes. Only destructive-action confirmations and practice-quiz submit confirmation remain modal.
+
+17 tests pass, including full-screen subject/lesson/resource/assignment/quiz/result/conversation navigation at all five viewport sizes, assignment drafts/submission, lesson completion, chat persistence, unauthorised content rejection and input validation. Existing mock-data and production-scope limitations in FEATURE_CHECKLIST.md still apply.

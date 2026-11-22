@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../main.dart';
 import '../features/screens.dart';
+import '../features/learning_screens.dart';
 
 class LuckyApp extends ConsumerStatefulWidget {
   const LuckyApp({super.key});
@@ -16,7 +17,24 @@ class LuckyApp extends ConsumerStatefulWidget {
 class _LuckyAppState extends ConsumerState<LuckyApp> {
   late final router = GoRouter(
     initialLocation: '/home',
+    redirect: (context, state) =>
+        ref.read(repositoryProvider).state['session'] == null &&
+                (state.uri.path.startsWith('/subject/') ||
+                    state.uri.path.startsWith('/learning/') ||
+                    state.uri.path.startsWith('/conversation/'))
+            ? '/home'
+            : null,
     routes: [
+      GoRoute(
+          path: '/subject/:name',
+          builder: (c, s) => SubjectScreen(subject: s.pathParameters['name']!)),
+      GoRoute(
+          path: '/learning/:id',
+          builder: (c, s) => LearningRoute(id: s.pathParameters['id']!)),
+      GoRoute(
+          path: '/conversation/:channel',
+          builder: (c, s) =>
+              ConversationRoute(channel: s.pathParameters['channel']!)),
       GoRoute(
         path: '/:page',
         builder: (c, s) => Portal(page: s.pathParameters['page']!),
