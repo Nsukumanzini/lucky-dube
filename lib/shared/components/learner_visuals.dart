@@ -1,3 +1,4 @@
+import '../../app/localization/app_language.dart';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 
@@ -35,27 +36,27 @@ class WelcomeBanner extends StatelessWidget {
           child: LayoutBuilder(builder: (context, size) {
             final copy =
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('LEARN • CREATE • GROW',
+              const LText('LEARN • CREATE • GROW',
                   style: TextStyle(
                       color: Color(0xff2563eb),
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2)),
               const SizedBox(height: 16),
-              Text('Big ideas.\nBrighter possibilities.',
+              LText('Big ideas.\nBrighter possibilities.',
                   style: Theme.of(context)
                       .textTheme
                       .headlineLarge
                       ?.copyWith(fontWeight: FontWeight.w800, height: 1.15)),
               const SizedBox(height: 14),
-              const Text(
+              const LText(
                   'A new skill, a creative spark, a step forward.\nMake today your next good chapter.',
                   style: TextStyle(height: 1.6)),
               const SizedBox(height: 22),
               FilledButton.icon(
                   onPressed: onContinue,
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Continue learning')),
+                  label: const LText('Continue learning')),
             ]);
             if (size.maxWidth < 600) {
               return Column(
@@ -90,7 +91,8 @@ class _LearningIllustrationState extends State<LearningIllustration> {
   bool hover = false;
   @override
   Widget build(BuildContext context) => Semantics(
-      label: 'An illustrated stack of colourful books with a creative spark',
+      label: tr(context,
+          'An illustrated stack of colourful books with a creative spark'),
       image: true,
       child: MouseRegion(
           onEnter: (_) => setState(() => hover = true),

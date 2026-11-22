@@ -1,3 +1,4 @@
+import '../app/localization/app_language.dart';
 // Retain compatibility with Flutter versions before the Material package split.
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../data/repository.dart';
 import '../shared/components/feature_page.dart';
 import '../shared/components/learner_visuals.dart';
 import 'communication_screens.dart';
+import '../shared/components/language_selector.dart';
 
 class Portal extends ConsumerStatefulWidget {
   final String page;
@@ -43,24 +45,24 @@ class _PortalState extends ConsumerState<Portal> {
     super.dispose();
   }
 
-  void toast(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  void toast(String text) => ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: LText(text)));
   Future<bool> confirm(String title) async =>
       await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: Text(title),
-          content: const Text(
+          title: LText(title),
+          content: const LText(
             'This changes only the local demonstration data on this device.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('Cancel'),
+              child: const LText('Cancel'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('Confirm'),
+              child: const LText('Confirm'),
             ),
           ],
         ),
@@ -72,7 +74,7 @@ class _PortalState extends ConsumerState<Portal> {
 
   Future<void> detail(String title, Widget content) =>
       Navigator.of(context).push<void>(MaterialPageRoute(
-          builder: (_) => FeaturePage(title: Text(title), content: content)));
+          builder: (_) => FeaturePage(title: LText(title), content: content)));
   Widget panel(String title, Widget child, {String? eyebrow}) => Card(
         child: Padding(
           padding: const EdgeInsets.all(22),
@@ -80,14 +82,14 @@ class _PortalState extends ConsumerState<Portal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (eyebrow != null)
-                Text(
+                LText(
                   eyebrow,
                   style: const TextStyle(
                     color: Color(0xff2563eb),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              LText(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 18),
               child,
             ],
@@ -107,8 +109,8 @@ class _PortalState extends ConsumerState<Portal> {
           backgroundColor: const Color(0xffeff6ff),
           child: Icon(icon, color: const Color(0xff2563eb)),
         ),
-        title: Text(title),
-        subtitle: Text(subtitle),
+        title: LText(title),
+        subtitle: LText(subtitle),
         trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: action,
       );
@@ -126,7 +128,7 @@ class _PortalState extends ConsumerState<Portal> {
           children: [
             const CircleAvatar(
               backgroundColor: Color(0xff2563eb),
-              child: Text(
+              child: LText(
                 'LD',
                 style: TextStyle(
                   color: Colors.white,
@@ -136,23 +138,25 @@ class _PortalState extends ConsumerState<Portal> {
             ),
             const SizedBox(width: 12),
             Expanded(
-                child: Text(
+                child: LText(
               MockRepository.school.displayName,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
             )),
             if (MediaQuery.sizeOf(context).width > 1000) ...[
               const SizedBox(width: 20),
-              const Chip(label: Text('LEARNER PORTAL')),
+              const Chip(label: LText('LEARNER PORTAL')),
             ],
           ],
         ),
         actions: [
-          const Chip(
-            label: Text('Demonstration', style: TextStyle(fontSize: 11)),
-          ),
+          const LanguageSelector(),
+          if (MediaQuery.sizeOf(context).width >= 600)
+            const Chip(
+              label: LText('Demonstration', style: TextStyle(fontSize: 11)),
+            ),
           IconButton(
-            tooltip: 'Notifications',
+            tooltip: tr(context, 'Notifications'),
             onPressed: () => go('notifications'),
             icon: Badge(
               isLabelVisible: r.value('notificationsRead', false) != true,
@@ -171,7 +175,7 @@ class _PortalState extends ConsumerState<Portal> {
               onDestinationSelected: (i) => go(nav[i]),
               leading: const Padding(
                 padding: EdgeInsets.all(16),
-                child: Text(
+                child: LText(
                   'YOUR WORKSPACE',
                   style: TextStyle(fontSize: 10, letterSpacing: 2),
                 ),
@@ -188,7 +192,7 @@ class _PortalState extends ConsumerState<Portal> {
                       Icons.person_outline,
                     ][i],
                   ),
-                  label: Text(
+                  label: LText(
                     ['Home', 'Subjects', 'Calendar', 'Messages', 'Profile'][i],
                   ),
                 ),
@@ -211,7 +215,7 @@ class _PortalState extends ConsumerState<Portal> {
                         children: [
                           content(),
                           const SizedBox(height: 36),
-                          const Text(
+                          const LText(
                             'Optimal Growth Technologies SA · Offline demonstration\nFictional records. Not an endorsed school service.',
                             style: TextStyle(fontSize: 11, color: Colors.grey),
                           ),
@@ -242,13 +246,15 @@ class _PortalState extends ConsumerState<Portal> {
                       Icons.person_outline,
                     ][i],
                   ),
-                  label: [
-                    'Home',
-                    'Subjects',
-                    'Calendar',
-                    'Messages',
-                    'Profile',
-                  ][i],
+                  label: tr(
+                      context,
+                      [
+                        'Home',
+                        'Subjects',
+                        'Calendar',
+                        'Messages',
+                        'Profile',
+                      ][i]),
                 ),
               ),
             ),
@@ -256,24 +262,27 @@ class _PortalState extends ConsumerState<Portal> {
   }
 
   Widget intro() => Scaffold(
+        appBar: AppBar(actions: const [LanguageSelector()]),
         body: Center(
+            child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircleAvatar(
                     radius: 45,
                     backgroundColor: Color(0xff2563eb),
-                    child: Text(
+                    child: LText(
                       'LD',
                       style: TextStyle(color: Colors.white, fontSize: 32),
                     ),
                   ),
                   const SizedBox(height: 30),
-                  Text(
+                  LText(
                     MockRepository.school.displayName,
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
@@ -284,7 +293,7 @@ class _PortalState extends ConsumerState<Portal> {
                     color: const Color(0xff2563eb),
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  LText(
                     [
                       'Your learning, all together',
                       'Stay connected to your school',
@@ -294,7 +303,7 @@ class _PortalState extends ConsumerState<Portal> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  LText(
                     [
                       'Explore lessons, original study guides and homework offline.',
                       'Follow announcements and school-controlled demonstration conversations.',
@@ -311,21 +320,22 @@ class _PortalState extends ConsumerState<Portal> {
                         r.setValue('onboarded', true);
                       }
                     },
-                    child: Text(onboarding == 2 ? 'Get started' : 'Next'),
+                    child: LText(onboarding == 2 ? 'Get started' : 'Next'),
                   ),
                   TextButton(
                     onPressed: () => r.setValue('onboarded', true),
-                    child: const Text('Skip introduction'),
+                    child: const LText('Skip introduction'),
                   ),
                   const SizedBox(height: 24),
-                  const Text('Powered by OG Technologies SA'),
+                  const LText('Powered by OG Technologies SA'),
                 ],
               ),
             ),
           ),
-        ),
+        )),
       );
   Widget login() => Scaffold(
+        appBar: AppBar(actions: const [LanguageSelector()]),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -336,14 +346,14 @@ class _PortalState extends ConsumerState<Portal> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    const LText(
                       'Sign in to your learner workspace. Accounts are managed by the school.',
                     ),
                     const SizedBox(height: 24),
                     TextField(
                       controller: number,
-                      decoration: const InputDecoration(
-                        labelText: 'Learner number',
+                      decoration: InputDecoration(
+                        labelText: tr(context, 'Learner number'),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -351,7 +361,7 @@ class _PortalState extends ConsumerState<Portal> {
                       controller: password,
                       obscureText: obscure,
                       decoration: InputDecoration(
-                        labelText: 'Password',
+                        labelText: tr(context, 'Password'),
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => obscure = !obscure),
                           icon: Icon(
@@ -365,11 +375,11 @@ class _PortalState extends ConsumerState<Portal> {
                     CheckboxListTile(
                       value: remember,
                       onChanged: (v) => setState(() => remember = v!),
-                      title: const Text('Remember me'),
+                      title: const LText('Remember me'),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
                     if (error != null)
-                      Text(error!, style: const TextStyle(color: Colors.red)),
+                      LText(error!, style: const TextStyle(color: Colors.red)),
                     FilledButton(
                       onPressed: () async {
                         final ok = await r.signIn(
@@ -384,7 +394,7 @@ class _PortalState extends ConsumerState<Portal> {
                           );
                         }
                       },
-                      child: const Text('Sign in'),
+                      child: const LText('Sign in'),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -395,23 +405,23 @@ class _PortalState extends ConsumerState<Portal> {
                         if (id != null && mounted) {
                           detail(
                             'Recovery request',
-                            const Text(
+                            const LText(
                               'Demonstration only: no request has been sent. In a live service, contact your school account administrator. Demo password: Demo123!',
                             ),
                           );
                         }
                       },
-                      child: const Text('Forgot password?'),
+                      child: const LText('Forgot password?'),
                     ),
                     const Divider(),
-                    const Text('DEMO ACCOUNT SELECTOR'),
-                    const Text('Password for all accounts: Demo123!'),
+                    const LText('DEMO ACCOUNT SELECTOR'),
+                    const LText('Password for all accounts: Demo123!'),
                     Wrap(
                       spacing: 8,
                       children: [8, 9, 10]
                           .map(
                             (g) => ActionChip(
-                              label: Text('Grade $g'),
+                              label: LText('Grade $g'),
                               onPressed: () {
                                 number.text =
                                     g == 10 ? 'LD10001' : 'LD${g}0001';
@@ -435,7 +445,7 @@ class _PortalState extends ConsumerState<Portal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            LText(
               title,
               style: Theme.of(context)
                   .textTheme
@@ -443,7 +453,7 @@ class _PortalState extends ConsumerState<Portal> {
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(subtitle, style: const TextStyle(color: Colors.grey)),
+            LText(subtitle, style: const TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -533,7 +543,7 @@ class _PortalState extends ConsumerState<Portal> {
                   .map(
                     (s) => ActionChip(
                       avatar: const Icon(Icons.arrow_outward, size: 16),
-                      label: Text(s),
+                      label: LText(s),
                       onPressed: () => go(slug(s)),
                     ),
                   )
@@ -625,19 +635,19 @@ class _PortalState extends ConsumerState<Portal> {
                               size: 20,
                               color: accent)),
                       const SizedBox(height: 16),
-                      Text(title,
+                      LText(title,
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: accent)),
                       const SizedBox(height: 8),
-                      Text(value,
+                      LText(value,
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w800)),
                       const SizedBox(height: 8),
-                      Text(sub,
+                      LText(sub,
                           style: const TextStyle(
                               fontSize: 11,
                               color: Color(0xff64748b),
@@ -648,9 +658,9 @@ class _PortalState extends ConsumerState<Portal> {
   Widget search(List<String> filters) => Column(
         children: [
           TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               prefixIcon: Icon(Icons.search),
-              hintText: 'Search your workspace',
+              hintText: tr(context, 'Search your workspace'),
             ),
             onChanged: (v) => setState(() => query = v.toLowerCase()),
           ),
@@ -660,7 +670,7 @@ class _PortalState extends ConsumerState<Portal> {
             children: filters
                 .map(
                   (f) => ChoiceChip(
-                    label: Text(f),
+                    label: LText(f),
                     selected: filter == f,
                     onSelected: (_) => setState(() => filter = f),
                   ),
@@ -707,24 +717,24 @@ class _PortalState extends ConsumerState<Portal> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Term $t  '),
+                        LText('Term $t  '),
                         Expanded(
                           child: LinearProgressIndicator(
                             value: (68 + t * 2) / 100,
                           ),
                         ),
-                        Text(' ${68 + t * 2}%'),
+                        LText(' ${68 + t * 2}%'),
                       ],
                     ),
                   ),
                 TextButton(
                   onPressed: () => detail(
                     'Unofficial report preview',
-                    Text(
+                    LText(
                       '${r.learner.name}\nGrade ${r.learner.grade} • 2026\n\nDEMONSTRATION DATA — NOT AN OFFICIAL SCHOOL REPORT\n\n${r.subjects(r.learner.grade).map((s) => '$s: 76%').join('\n')}',
                     ),
                   ),
-                  child: const Text('Preview unofficial report'),
+                  child: const LText('Preview unofficial report'),
                 ),
               ],
             ),
@@ -773,7 +783,7 @@ class _PortalState extends ConsumerState<Portal> {
           );
         }),
         if (list.where((s) => s.toLowerCase().contains(query)).isEmpty)
-          const Text('No matching content. Try another search.'),
+          const LText('No matching content. Try another search.'),
       ],
     );
   }
@@ -797,14 +807,14 @@ class _PortalState extends ConsumerState<Portal> {
                 onPressed: () => setState(() => week--),
                 icon: const Icon(Icons.chevron_left),
               ),
-              Text(
+              LText(
                   'Week of ${DateTime(2026, 11, 23).add(Duration(days: week * 7)).day}/${DateTime(2026, 11, 23).add(Duration(days: week * 7)).month}'),
               IconButton(
                 onPressed: () => setState(() => week++),
                 icon: const Icon(Icons.chevron_right),
               ),
               FilterChip(
-                label: const Text('Weekly'),
+                label: const LText('Weekly'),
                 selected: weekly,
                 onSelected: (v) => setState(() => weekly = v),
               ),
@@ -827,7 +837,7 @@ class _PortalState extends ConsumerState<Portal> {
                       i == 2 ? Icons.coffee : Icons.schedule,
                       () => detail(
                         'Schedule details',
-                        Text(
+                        LText(
                           'Grade ${r.learner.grade} • ${r.learner.group}\n${i == 2 ? 'Break period' : 'Bring your workbook. Topic: term consolidation. Teacher: ${MockRepository.teachers[i]}'}',
                         ),
                       ),
@@ -843,7 +853,7 @@ class _PortalState extends ConsumerState<Portal> {
           heading('Attendance', 'Read-only demonstration school records'),
           panel(
             '96% attendance',
-            const Text(
+            const LText(
               '48 present • 2 absent • 3 late arrivals\n50 recorded school days',
             ),
           ),
@@ -866,7 +876,7 @@ class _PortalState extends ConsumerState<Portal> {
                         : i == 16
                             ? Colors.amber.shade100
                             : Colors.green.shade100,
-                    child: Text(
+                    child: LText(
                       '${i + 1}',
                       style: const TextStyle(color: Colors.black),
                     ),
@@ -889,7 +899,7 @@ class _PortalState extends ConsumerState<Portal> {
           ),
           panel(
             'Attendance history',
-            const Text(
+            const LText(
               '10 Nov • Absent\n17 Nov • Late, 08:12\n24 Nov • Present\n25 Nov • Present\n26 Nov • Present',
             ),
           ),
@@ -916,7 +926,7 @@ class _PortalState extends ConsumerState<Portal> {
                 icon: const Icon(Icons.chevron_left),
               ),
               Expanded(
-                child: Text(
+                child: LText(
                   '${day.year} / ${day.month}',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
@@ -928,7 +938,7 @@ class _PortalState extends ConsumerState<Portal> {
                 icon: const Icon(Icons.chevron_right),
               ),
               FilterChip(
-                label: const Text('Week'),
+                label: const LText('Week'),
                 selected: weekly,
                 onSelected: (v) => setState(() => weekly = v),
               ),
@@ -955,7 +965,7 @@ class _PortalState extends ConsumerState<Portal> {
                   ),
                   onPressed: () =>
                       setState(() => day = DateTime(day.year, day.month, n)),
-                  child: Text('$n'),
+                  child: LText('$n'),
                 );
               },
             ),
@@ -982,7 +992,7 @@ class _PortalState extends ConsumerState<Portal> {
                         Icons.event,
                         () => detail(
                           e,
-                          const Text(
+                          const LText(
                             'School-managed demonstration event. Location: Arts studio / school hall. Bring your learning materials and arrive ten minutes early.',
                           ),
                         ),
@@ -993,7 +1003,7 @@ class _PortalState extends ConsumerState<Portal> {
                     e,
                     'Personal reminder',
                     Icons.alarm,
-                    () => detail('Personal reminder', Text(e)),
+                    () => detail('Personal reminder', LText(e)),
                   ),
                 ),
               ],
@@ -1010,7 +1020,7 @@ class _PortalState extends ConsumerState<Portal> {
               }
             },
             icon: const Icon(Icons.add),
-            label: const Text('Personal reminder'),
+            label: const LText('Personal reminder'),
           ),
         ],
       );
@@ -1042,7 +1052,7 @@ class _PortalState extends ConsumerState<Portal> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const LText(
                           'Please prepare your learning materials for the final activities of Term 4. Learners should follow the published timetable and speak to their class teacher if they need support.\n\nThis announcement is fictional and is not an official school notice.',
                         ),
                         TextButton(
@@ -1050,7 +1060,7 @@ class _PortalState extends ConsumerState<Portal> {
                             r.put('bookmark-$e', true);
                             toast('Announcement bookmarked');
                           },
-                          child: const Text('Bookmark announcement'),
+                          child: const LText('Bookmark announcement'),
                         ),
                       ],
                     ),
@@ -1070,7 +1080,7 @@ class _PortalState extends ConsumerState<Portal> {
           ),
           panel(
             'On stage • Creative futures',
-            const Text(
+            const LText(
               '26 November 2026 • 14:30\nFinal ensemble rehearsal • Arts studio\nUpcoming production: Voices of Tomorrow • 30 November',
             ),
           ),
@@ -1079,10 +1089,10 @@ class _PortalState extends ConsumerState<Portal> {
             children: MockRepository.school.disciplines
                 .map(
                   (e) => ActionChip(
-                    label: Text(e),
+                    label: LText(e),
                     onPressed: () => detail(
                       e,
-                      Text(
+                      LText(
                         '$e practice studio\n\nWarm up safely, rehearse a short original sequence and reflect on expression, timing and collaboration.\n\nEducator feedback: Strong commitment. Practise transitions and support your ensemble.',
                       ),
                     ),
@@ -1101,7 +1111,7 @@ class _PortalState extends ConsumerState<Portal> {
                   'Creative work ready',
                 ])
                   CheckboxListTile(
-                    title: Text(e),
+                    title: LText(e),
                     value: r.value(e, false) as bool,
                     onChanged: (v) => r.put(e, v),
                   ),
@@ -1113,7 +1123,7 @@ class _PortalState extends ConsumerState<Portal> {
                     );
                   },
                   child:
-                      const Text('Request rehearsal attendance confirmation'),
+                      const LText('Request rehearsal attendance confirmation'),
                 ),
               ],
             ),
@@ -1122,13 +1132,13 @@ class _PortalState extends ConsumerState<Portal> {
             'Your private portfolio',
             Column(
               children: [
-                const Text('Private by default • never publicly published'),
+                const LText('Private by default • never publicly published'),
                 ...List<String>.from(r.value('portfolio', <String>[])).map(
                   (e) => tile(
                     e,
                     'Original creative work • Private',
                     Icons.palette_outlined,
-                    () => detail('Portfolio project', Text(e)),
+                    () => detail('Portfolio project', LText(e)),
                   ),
                 ),
                 FilledButton.icon(
@@ -1147,7 +1157,7 @@ class _PortalState extends ConsumerState<Portal> {
                     ]);
                   },
                   icon: const Icon(Icons.add),
-                  label: const Text('Add creative project'),
+                  label: const LText('Add creative project'),
                 ),
               ],
             ),
@@ -1167,7 +1177,7 @@ class _PortalState extends ConsumerState<Portal> {
         heading('Notifications', 'Local in-app updates'),
         TextButton(
           onPressed: () => r.put('notificationsRead', true),
-          child: const Text('Mark all as read'),
+          child: const LText('Mark all as read'),
         ),
         for (final n in list.where((n) => r.value('dismiss-$n', false) != true))
           Card(
@@ -1183,7 +1193,7 @@ class _PortalState extends ConsumerState<Portal> {
                         : 'homework',
               ),
               trailing: IconButton(
-                tooltip: 'Dismiss notification',
+                tooltip: tr(context, 'Dismiss notification'),
                 onPressed: () => r.put('dismiss-$n', true),
                 icon: const Icon(Icons.close),
               ),
@@ -1199,7 +1209,7 @@ class _PortalState extends ConsumerState<Portal> {
           heading('Your profile', 'Official learner details are read-only'),
           panel(
             r.learner.name,
-            Text(
+            LText(
               '${r.learner.id} • Grade ${r.learner.grade} • ${r.learner.group}\n${MockRepository.school.name}\nAcademic year 2026 • Class teacher ${MockRepository.teachers[0]}\nAttendance: 96%\n\nEnrolled subjects: ${r.subjects(r.learner.grade).join(', ')}',
             ),
           ),
@@ -1221,34 +1231,36 @@ class _PortalState extends ConsumerState<Portal> {
             Icons.privacy_tip_outlined,
             () => detail(
               'About Lucky Dube',
-              Text(
+              LText(
                 '${MockRepository.school.owner}\n\nIndependent demonstration. No school endorsement is implied. All learners and teachers are fictional. Data stays in local device storage; do not enter sensitive information. No backend, advertising, payments or external APIs.',
               ),
             ),
           ),
           TextButton(
-              onPressed: () => r.logout(), child: const Text('Sign out')),
+              onPressed: () => r.logout(), child: const LText('Sign out')),
         ],
       );
   Widget settings() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           heading('Settings', 'Make this workspace yours'),
+          panel('Language', const LanguageSelector()),
           panel(
             'Appearance & accessibility',
             Column(
               children: [
                 DropdownButtonFormField<int>(
+                  isExpanded: true,
                   initialValue: (r.state['theme'] as int?) ?? 1,
                   items: const [
-                    DropdownMenuItem(value: 0, child: Text('System theme')),
-                    DropdownMenuItem(value: 1, child: Text('Light mode')),
-                    DropdownMenuItem(value: 2, child: Text('Dark mode')),
+                    DropdownMenuItem(value: 0, child: LText('System theme')),
+                    DropdownMenuItem(value: 1, child: LText('Light mode')),
+                    DropdownMenuItem(value: 2, child: LText('Dark mode')),
                   ],
                   onChanged: (v) => r.setValue('theme', v),
                 ),
                 const SizedBox(height: 16),
-                const Text('Text size'),
+                const LText('Text size'),
                 Slider(
                   value: (r.state['textScale'] as num?)?.toDouble() ?? 1,
                   min: 1,
@@ -1257,7 +1269,7 @@ class _PortalState extends ConsumerState<Portal> {
                   onChanged: (v) => r.setValue('textScale', v),
                 ),
                 SwitchListTile(
-                  title: const Text('Local notification preferences'),
+                  title: const LText('Local notification preferences'),
                   value: r.value('notificationPreference', true) as bool,
                   onChanged: (v) => r.put('notificationPreference', v),
                 ),
@@ -1271,7 +1283,7 @@ class _PortalState extends ConsumerState<Portal> {
               children: [8, 9, 10]
                   .map(
                     (g) => ActionChip(
-                      label: Text('Grade $g'),
+                      label: LText('Grade $g'),
                       onPressed: () => r.signIn(
                         g == 10 ? 'LD10001' : 'LD${g}0001',
                         'Demo123!',
@@ -1324,7 +1336,7 @@ class _PortalState extends ConsumerState<Portal> {
           heading('Help & learner safety', 'Support for your learning journey'),
           panel(
             'Need help right now?',
-            const Text(
+            const LText(
               'For real emergencies, contact a responsible adult or appropriate emergency service immediately. This demonstration cannot deliver reports to staff or emergency services.',
             ),
           ),
@@ -1335,11 +1347,11 @@ class _PortalState extends ConsumerState<Portal> {
             'Who can read my portfolio?',
           ])
             ExpansionTile(
-              title: Text(q),
+              title: LText(q),
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
+                  child: LText(
                     {
                       'How do I sign in?':
                           'Use your provided learner number and Demo123!; no self-registration is available.',
@@ -1383,7 +1395,7 @@ class _PortalState extends ConsumerState<Portal> {
                         if (mounted) {
                           detail(
                             'Request $id',
-                            const Text(
+                            const LText(
                               'Saved privately on this device only. This has NOT been delivered to real school staff or emergency services. Speak directly to a responsible adult for real support.',
                             ),
                           );

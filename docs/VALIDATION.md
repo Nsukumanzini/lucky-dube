@@ -22,3 +22,7 @@ Feature details and entry forms now use complete pages with app bars, back navig
 ## Light visual and communication refresh — 22 November 2026
 
 19 tests pass, including the existing five-viewport workflow coverage plus light-theme defaults and staff/group inbox filtering at 360px with enlarged text. Static analysis is clean. Illustrations are original local vector artwork; no external assets or recurring animation tickers were introduced. Reduced-motion settings suppress the welcome transition and hover animation. Dark/system themes remain optional in Settings after the initial light migration.
+
+## English / isiZulu language option — 22 November 2026
+
+28 tests pass. Added catalogue and parameter checks, language persistence/account isolation, pre-login language selection, short-mobile onboarding and isiZulu navigation/detail layouts at 360, 390, 768, 1024 and 1440 pixels. Fixed an overflowing theme dropdown exposed by longer isiZulu labels. Flutter framework localizations and the application catalogue are bundled offline. No external translation service is used. Unknown authored resources keep their source language; school terminology should be reviewed by an isiZulu-speaking educator.

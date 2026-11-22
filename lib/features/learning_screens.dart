@@ -1,3 +1,4 @@
+import '../app/localization/app_language.dart';
 import 'dart:async';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   @override
   Widget build(BuildContext context) => FeaturePage(
-        title: Text(widget.item.title),
+        title: LText(widget.item.title),
         content: SizedBox(
           width: 580,
           child: SingleChildScrollView(
@@ -46,15 +47,15 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                LText(
                   '${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or a local attachment. Resubmission is permitted.',
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: response,
                   maxLines: 5,
-                  decoration:
-                      const InputDecoration(labelText: 'Written response'),
+                  decoration: InputDecoration(
+                      labelText: tr(context, 'Written response')),
                 ),
                 for (final f in files)
                   ListTile(
@@ -77,16 +78,16 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     }
                   },
                   icon: const Icon(Icons.attach_file),
-                  label: const Text('Select local attachments'),
+                  label: const LText('Select local attachments'),
                 ),
                 if (submitted)
-                  const Text(
+                  const LText(
                     'Submission received locally • Awaiting marking.\nTeacher feedback will appear after simulated review.',
                   ),
                 ...List<dynamic>.from(
                   (widget.repo.value(widget.item.id, {}) as Map)['history'] ??
                       [],
-                ).map((e) => Text('$e')),
+                ).map((e) => LText('$e')),
               ],
             ),
           ),
@@ -94,7 +95,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const LText('Close'),
           ),
           TextButton(
             onPressed: () {
@@ -108,22 +109,22 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(
-                  const SnackBar(content: Text('Draft saved locally')));
+                  const SnackBar(content: LText('Draft saved locally')));
             },
-            child: const Text('Save draft'),
+            child: const LText('Save draft'),
           ),
           FilledButton(
             onPressed: () {
               if (response.text.trim().isEmpty && files.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text(
+                    content: LText(
                         'Add a written response or attachment before submitting.')));
                 return;
               }
               widget.repo.submit(widget.item.id, response.text, files);
               setState(() => submitted = true);
             },
-            child: Text(submitted ? 'Resubmit' : 'Submit assignment'),
+            child: LText(submitted ? 'Resubmit' : 'Submit assignment'),
           ),
         ],
       );
@@ -188,7 +189,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ],
     ];
     return FeaturePage(
-      title: Text(done ? 'Practice completion summary' : widget.item.title),
+      title: LText(done ? 'Practice completion summary' : widget.item.title),
       content: SizedBox(
         width: 560,
         child: SingleChildScrollView(
@@ -196,16 +197,16 @@ class _QuizScreenState extends State<QuizScreen> {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    LText(
                       '${MockRepository.score(answers)} / 3 objective marks • ${(MockRepository.score(answers) / 3 * 100).round()}%',
                     ),
-                    const Text(
+                    const LText(
                       'Written response: pending simulated marking. Practice only; this does not alter official published records.',
                     ),
                     for (var i = 0; i < 3; i++)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
+                        child: LText(
                           '${i + 1}. ${answers[i] == [
                                 1,
                                 0,
@@ -223,13 +224,13 @@ class _QuizScreenState extends State<QuizScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    LText(
                       'Practice only • 1 mark per objective question\n${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')} remaining • Question ${index + 1} of 4',
                     ),
                     const SizedBox(height: 12),
                     LinearProgressIndicator(value: (index + 1) / 4),
                     const SizedBox(height: 16),
-                    Text(questions[index]),
+                    LText(questions[index]),
                     if (index < 3)
                       for (var i = 0; i < options[index].length; i++)
                         ListTile(
@@ -237,18 +238,19 @@ class _QuizScreenState extends State<QuizScreen> {
                               ? Icons.radio_button_checked
                               : Icons.radio_button_unchecked),
                           onTap: () => setState(() => answers[index] = i),
-                          title: Text(options[index][i]),
+                          title: LText(options[index][i]),
                         ),
                     if (index == 3)
                       TextField(
                         controller: written,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'Written answer • manual marking',
+                        decoration: InputDecoration(
+                          labelText:
+                              tr(context, 'Written answer • manual marking'),
                         ),
                       ),
                     FilterChip(
-                      label: const Text('Flag for review'),
+                      label: const LText('Flag for review'),
                       selected: flags.contains(index),
                       onSelected: (v) => setState(() {
                         if (v) {
@@ -266,23 +268,23 @@ class _QuizScreenState extends State<QuizScreen> {
           ? [
               FilledButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Done'),
+                child: const LText('Done'),
               ),
             ]
           : [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Exit practice'),
+                child: const LText('Exit practice'),
               ),
               if (index > 0)
                 TextButton(
                   onPressed: () => setState(() => index--),
-                  child: const Text('Previous'),
+                  child: const LText('Previous'),
                 ),
               if (index < 3)
                 FilledButton(
                   onPressed: () => setState(() => index++),
-                  child: const Text('Next'),
+                  child: const LText('Next'),
                 ),
               if (index == 3)
                 FilledButton(
@@ -290,25 +292,25 @@ class _QuizScreenState extends State<QuizScreen> {
                     final yes = await showDialog<bool>(
                       context: context,
                       builder: (c) => AlertDialog(
-                        title: const Text('Submit practice quiz?'),
-                        content: Text(
+                        title: const LText('Submit practice quiz?'),
+                        content: LText(
                           '${answers.where((a) => a < 0).length} unanswered objective questions. ${flags.length} flagged for review.',
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(c, false),
-                            child: const Text('Review'),
+                            child: const LText('Review'),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.pop(c, true),
-                            child: const Text('Submit'),
+                            child: const LText('Submit'),
                           ),
                         ],
                       ),
                     );
                     if (yes == true) finish();
                   },
-                  child: const Text('Submit quiz'),
+                  child: const LText('Submit quiz'),
                 ),
             ],
     );
@@ -325,8 +327,8 @@ class LearningRoute extends ConsumerWidget {
         repo.items.where((e) => e.id == id && e.grade == repo.learner.grade);
     if (matches.isEmpty) {
       return const FeaturePage(
-          title: Text('Learning content'),
-          content: Text(
+          title: LText('Learning content'),
+          content: LText(
               'This content is not assigned to your learner profile. Return to your subjects to select an available item.'));
     }
     final item = matches.first;
@@ -364,37 +366,37 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
     final e = widget.item;
     final r = widget.repo;
     return FeaturePage(
-        title: Text(e.title),
+        title: LText(e.title),
         content:
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Wrap(spacing: 8, children: [
-            Chip(label: Text(e.kind)),
-            Chip(label: Text(e.subject)),
-            Chip(label: Text('Term ${e.term}'))
+            Chip(label: LText(e.kind)),
+            Chip(label: LText(e.subject)),
+            Chip(label: LText('Term ${e.term}'))
           ]),
           const SizedBox(height: 24),
-          Text(e.title, style: Theme.of(context).textTheme.headlineMedium),
+          LText(e.title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 24),
           if (e.kind == 'Result') ...[
-            const Text('Published result',
+            const LText('Published result',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            Text('76%', style: Theme.of(context).textTheme.displayMedium),
-            const Text('38 / 50 marks • Published 26 November 2026'),
+            LText('76%', style: Theme.of(context).textTheme.displayMedium),
+            const LText('38 / 50 marks • Published 26 November 2026'),
             const Divider(height: 40),
-            const Text('Teacher feedback',
+            const LText('Teacher feedback',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text(
+            const LText(
                 'Clear reasoning. Show each step to improve accuracy. This published demonstration record is read-only.')
           ] else ...[
-            Text(
+            LText(
                 e.kind == 'Lesson'
                     ? 'Learning objectives'
                     : 'Original offline revision guide',
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            Text(e.body,
+            LText(e.body,
                 style: Theme.of(context)
                     .textTheme
                     .bodyLarge
@@ -403,7 +405,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
             Card(
                 child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Text(e.kind == 'Lesson'
+                    child: LText(e.kind == 'Lesson'
                         ? 'Reflect: explain one idea you learned and one question you would like to ask in class.'
                         : 'Text guide • Bundled locally • Demonstration preview\nAll content on this screen is available without an external document or video service.'))),
             if (downloading)
@@ -420,7 +422,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                   setState(() {});
                 },
                 icon: const Icon(Icons.check),
-                label: Text(r.value(e.id, false) == true
+                label: LText(r.value(e.id, false) == true
                     ? 'Completed'
                     : 'Mark as complete')),
           if (e.kind == 'Resource') ...[
@@ -431,7 +433,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                   setState(() {});
                 },
                 icon: const Icon(Icons.bookmark_outline),
-                label: Text(r.value('saved-${e.id}', false) == true
+                label: LText(r.value('saved-${e.id}', false) == true
                     ? 'Bookmarked'
                     : 'Bookmark')),
             FilledButton.icon(
@@ -445,7 +447,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                         if (mounted) setState(() => downloading = false);
                       },
                 icon: const Icon(Icons.download),
-                label: Text(r.value('download-${e.id}', false) == true
+                label: LText(r.value('download-${e.id}', false) == true
                     ? 'Available offline'
                     : 'Download for offline'))
           ]
@@ -467,9 +469,9 @@ class ConversationRoute extends ConsumerWidget {
     ];
     if (!authorised.contains(channel)) {
       return const FeaturePage(
-          title: Text('Conversation unavailable'),
+          title: LText('Conversation unavailable'),
           content:
-              Text('This channel is not assigned to your learner profile.'));
+              LText('This channel is not assigned to your learner profile.'));
     }
     return ConversationScreen(
         key: ValueKey('${r.learner.id}-$channel'), channel: channel, repo: r);
@@ -484,9 +486,9 @@ class SubjectScreen extends ConsumerWidget {
     final repo = ref.watch(repositoryProvider);
     if (!repo.subjects(repo.learner.grade).contains(subject)) {
       return const FeaturePage(
-          title: Text('Subject unavailable'),
+          title: LText('Subject unavailable'),
           content:
-              Text('This subject is not assigned to your learner profile.'));
+              LText('This subject is not assigned to your learner profile.'));
     }
     final teacher = MockRepository.teachers[
         repo.subjects(repo.learner.grade).indexOf(subject) %
@@ -495,11 +497,11 @@ class SubjectScreen extends ConsumerWidget {
     return DefaultTabController(
         length: 7,
         child: FeaturePage(
-            title: Text(subject),
+            title: LText(subject),
             scrollable: false,
             content:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
+              LText(
                   'Grade ${repo.learner.grade} • ${repo.learner.group} • $teacher',
                   style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 20),
@@ -519,24 +521,24 @@ class SubjectScreen extends ConsumerWidget {
               Expanded(
                   child: TabBarView(children: [
                 ListView(children: [
-                  Text('Your subject workspace',
+                  LText('Your subject workspace',
                       style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 16),
-                  const Text(
+                  const LText(
                       'Term 4 • Consolidation and creative application\nExplore your lessons, prepare assignments and practise before the final assessments.'),
                   const SizedBox(height: 24),
                   for (final kind in kinds)
                     Card(
                         child: ListTile(
                             leading: const Icon(Icons.arrow_forward),
-                            title: Text({
+                            title: LText({
                               'Lesson': 'Continue learning',
                               'Resource': 'Learning materials',
                               'Assignment': 'Homework tasks',
                               'Quiz': 'Practice assessments',
                               'Result': 'Published results'
                             }[kind]!),
-                            subtitle: Text(
+                            subtitle: LText(
                                 '${repo.content(kind).where((e) => e.subject == subject).length} available'),
                             onTap: () => context.push(
                                 '/learning/${Uri.encodeComponent(repo.content(kind).firstWhere((e) => e.subject == subject).id)}')))
@@ -549,21 +551,21 @@ class SubjectScreen extends ConsumerWidget {
                       Card(
                           child: ListTile(
                               contentPadding: const EdgeInsets.all(20),
-                              title: Text(item.title),
-                              subtitle: Text('Term ${item.term} • $teacher'),
+                              title: LText(item.title),
+                              subtitle: LText('Term ${item.term} • $teacher'),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => context.push(
                                   '/learning/${Uri.encodeComponent(item.id)}')))
                   ]),
                 ListView(children: [
-                  const Text(
+                  const LText(
                       'Discuss learning with your school-authorised group. Demonstration educator responses are clearly labelled.'),
                   const SizedBox(height: 20),
                   FilledButton.icon(
                       onPressed: () => context.push(
                           '/conversation/${Uri.encodeComponent('${repo.learner.group} • Moderated class group')}'),
                       icon: const Icon(Icons.forum_outlined),
-                      label: const Text('Open class discussion'))
+                      label: const LText('Open class discussion'))
                 ])
               ]))
             ])));

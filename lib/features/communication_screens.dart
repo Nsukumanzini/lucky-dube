@@ -1,3 +1,4 @@
+import '../app/localization/app_language.dart';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,13 +43,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             filter == 'Staff' && e.key == 0 ||
             filter == 'Groups' && e.key > 0));
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Messages',
+      LText('Messages',
           style: Theme.of(context)
               .textTheme
               .headlineMedium
               ?.copyWith(fontWeight: FontWeight.w800)),
       const SizedBox(height: 8),
-      const Text(
+      const LText(
           'Your learning circle. Helpful conversations, in the right place.'),
       const SizedBox(height: 24),
       Container(
@@ -68,19 +69,19 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Text('Connected, with care',
+                  LText('Connected, with care',
                       style:
                           TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                   SizedBox(height: 6),
-                  Text(
+                  LText(
                       'Staff-managed channels and moderated groups. All educator replies here are simulated for the demonstration.',
                       style: TextStyle(height: 1.5))
                 ]))
           ])),
       const SizedBox(height: 24),
       TextField(
-          decoration: const InputDecoration(
-              hintText: 'Search conversations',
+          decoration: InputDecoration(
+              hintText: tr(context, 'Search conversations'),
               prefixIcon: Icon(Icons.search_rounded)),
           onChanged: (value) => setState(() => query = value.toLowerCase())),
       const SizedBox(height: 14),
@@ -88,7 +89,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           spacing: 8,
           children: ['All', 'Staff', 'Groups']
               .map((name) => ChoiceChip(
-                  label: Text(name),
+                  label: LText(name),
                   selected: filter == name,
                   onSelected: (_) => setState(() => filter = name)))
               .toList()),
@@ -96,7 +97,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       if (filtered.isEmpty)
         const Padding(
             padding: EdgeInsets.all(32),
-            child: Text(
+            child: LText(
                 'No conversations match your search. Try a different name or group.')),
       for (final entry in filtered)
         Builder(builder: (context) {
@@ -142,7 +143,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                         children: [
                                       Row(children: [
                                         Expanded(
-                                            child: Text(
+                                            child: LText(
                                                 channel.split(' • ').first,
                                                 style: const TextStyle(
                                                     fontWeight: FontWeight.w700,
@@ -156,7 +157,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                                   shape: BoxShape.circle))
                                       ]),
                                       const SizedBox(height: 5),
-                                      Text(
+                                      LText(
                                           i == 0
                                               ? 'CLASS TEACHER'
                                               : 'MODERATED GROUP',
@@ -166,7 +167,12 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                               fontWeight: FontWeight.w800,
                                               letterSpacing: 1)),
                                       const SizedBox(height: 9),
-                                      Text(preview,
+                                      Text(
+                                          messages.isEmpty ||
+                                                  messages.last
+                                                      .startsWith('Educator')
+                                              ? tr(context, preview)
+                                              : preview,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -175,7 +181,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                                   .onSurfaceVariant,
                                               height: 1.5)),
                                       const SizedBox(height: 8),
-                                      Text(
+                                      LText(
                                           messages.isEmpty
                                               ? 'Start a conversation'
                                               : 'Latest reply • Demonstration',
@@ -267,12 +273,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Text(widget.channel.split(' • ').first,
+                  LText(widget.channel.split(' • ').first,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700)),
-                  Text(
+                  LText(
                       group
                           ? 'Moderated learning group'
                           : 'Class teacher • Staff-managed',
@@ -282,7 +288,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           ]),
           actions: [
             PopupMenuButton<String>(
-                tooltip: 'Conversation options',
+                tooltip: tr(context, 'Conversation options'),
                 onSelected: (action) {
                   if (action == 'mute') {
                     setState(() => muted = !muted);
@@ -290,18 +296,18 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   } else {
                     widget.repo.put('reported-${widget.channel}', true);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text(
+                        content: LText(
                             'Report saved locally only. For real support, contact a responsible adult.')));
                   }
                 },
                 itemBuilder: (_) => [
                       PopupMenuItem(
                           value: 'mute',
-                          child: Text(muted
+                          child: LText(muted
                               ? 'Unmute conversation'
                               : 'Mute conversation')),
                       const PopupMenuItem(
-                          value: 'report', child: Text('Report communication'))
+                          value: 'report', child: LText('Report communication'))
                     ])
           ]),
       body: SafeArea(
@@ -321,7 +327,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                               size: 17, color: Color(0xff0d9488)),
                           const SizedBox(width: 10),
                           const Expanded(
-                              child: Text(
+                              child: LText(
                                   'Demonstration channel • Educator replies are simulated',
                                   style: TextStyle(fontSize: 12))),
                           if (muted)
@@ -336,7 +342,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             children: [
                           const Center(
                               child: Chip(
-                                  label: Text('26 November 2026',
+                                  label: LText('26 November 2026',
                                       style: TextStyle(fontSize: 11)))),
                           const SizedBox(height: 22),
                           const MessageBubble(
@@ -361,7 +367,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 IconButton(
-                                    tooltip: 'Share attachment',
+                                    tooltip: tr(context, 'Share attachment'),
                                     onPressed: () async {
                                       final files =
                                           await FilePicker.platform.pickFiles();
@@ -378,19 +384,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                         minLines: 1,
                                         maxLines: 4,
                                         textInputAction: TextInputAction.send,
-                                        decoration: const InputDecoration(
-                                            hintText:
-                                                'Write a thoughtful message…',
-                                            labelText: 'Reply to this channel'),
+                                        decoration: InputDecoration(
+                                            hintText: tr(context,
+                                                'Write a thoughtful message…'),
+                                            labelText: tr(context,
+                                                'Reply to this channel')),
                                         onSubmitted: send)),
                                 const SizedBox(width: 10),
                                 IconButton.filled(
-                                    tooltip: 'Send message',
+                                    tooltip: tr(context, 'Send message'),
                                     onPressed: () => send(text.text),
                                     icon: const Icon(Icons.send_rounded)),
                               ]),
                           const SizedBox(height: 10),
-                          const Text(
+                          const LText(
                               'School-authorised conversations • Stored on this device',
                               style: TextStyle(
                                   fontSize: 10, color: Color(0xff64748b)))
@@ -427,7 +434,7 @@ class MessageBubble extends StatelessWidget {
                           Padding(
                               padding: const EdgeInsets.only(
                                   bottom: 6, left: 4, right: 4),
-                              child: Text(
+                              child: LText(
                                   sent
                                       ? 'You'
                                       : parts.first.contains('Simulated')
@@ -465,7 +472,10 @@ class MessageBubble extends StatelessWidget {
                                           color: sent
                                               ? Colors.white
                                               : const Color(0xff2563eb)),
-                                    Text(body,
+                                    Text(
+                                        message.startsWith('Educator')
+                                            ? tr(context, body)
+                                            : body,
                                         style: TextStyle(
                                             color: sent
                                                 ? Colors.white
@@ -477,7 +487,7 @@ class MessageBubble extends StatelessWidget {
                                     Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(
+                                          LText(
                                               parts.first.split(' • ').length >
                                                       1
                                                   ? parts.first.split(' • ')[1]
@@ -494,7 +504,7 @@ class MessageBubble extends StatelessWidget {
                                                 size: 13,
                                                 color: Colors.white70),
                                             const SizedBox(width: 4),
-                                            const Text('Saved locally',
+                                            const LText('Saved locally',
                                                 style: TextStyle(
                                                     fontSize: 10,
                                                     color: Colors.white70))

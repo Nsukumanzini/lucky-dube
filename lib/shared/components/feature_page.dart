@@ -1,3 +1,4 @@
+import '../../app/localization/app_language.dart';
 // Keep compatibility with Flutter versions before the Material package split.
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
@@ -76,16 +77,16 @@ class _EntryScreenState extends State<EntryScreen> {
 
   @override
   Widget build(BuildContext context) => FeaturePage(
-          title: Text(widget.title),
+          title: LText(widget.title),
           content: Form(
               key: form,
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.title,
+                    LText(widget.title,
                         style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 12),
-                    const Text(
+                    const LText(
                         'Your information is saved only in this offline demonstration.'),
                     const SizedBox(height: 28),
                     TextFormField(
@@ -94,21 +95,21 @@ class _EntryScreenState extends State<EntryScreen> {
                         autofocus: true,
                         decoration: InputDecoration(
                             labelText: widget.hint, alignLabelWithHint: true),
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                                ? 'Please enter details before saving.'
-                                : null),
+                        validator: (value) => value == null ||
+                                value.trim().isEmpty
+                            ? tr(context, 'Please enter details before saving.')
+                            : null),
                   ])),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
+                child: const LText('Cancel')),
             FilledButton(
                 onPressed: () {
                   if (form.currentState!.validate()) {
                     Navigator.pop(context, controller.text.trim());
                   }
                 },
-                child: const Text('Save'))
+                child: const LText('Save'))
           ]);
 }

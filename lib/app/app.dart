@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'localization/app_language.dart';
 
 import '../main.dart';
 import '../features/screens.dart';
@@ -52,6 +54,17 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
     final repo = ref.watch(repositoryProvider);
     return MaterialApp.router(
       title: 'Lucky Dube',
+      locale: Locale(repo.language, 'ZA'),
+      supportedLocales: const [Locale('en', 'ZA'), Locale('zu', 'ZA')],
+      localizationsDelegates: const [
+        AppLanguage.delegate,
+        // Compatibility with Flutter SDKs before the UI package split.
+        // ignore: deprecated_member_use
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        // ignore: deprecated_member_use
+        GlobalCupertinoLocalizations.delegate
+      ],
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       themeMode: ThemeMode.values[(repo.state['theme'] as int?) ?? 1],

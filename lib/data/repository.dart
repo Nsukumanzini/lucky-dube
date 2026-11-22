@@ -8,6 +8,7 @@ class SchoolConfiguration {
   final String id, name, displayName, owner, language, contact, logoAsset;
   final int primaryColor, secondaryColor;
   final List<int> grades;
+  final List<String> languages;
   final List<String> terms, modules, disciplines;
   const SchoolConfiguration({
     this.id = 'ld-demo',
@@ -15,6 +16,7 @@ class SchoolConfiguration {
     this.displayName = 'Lucky Dube',
     this.owner = 'Optimal Growth Technologies SA',
     this.language = 'English',
+    this.languages = const ['en', 'zu'],
     this.contact = 'Demonstration support only',
     this.logoAsset = 'assets/icon.svg',
     this.primaryColor = 0xff14213d,
@@ -184,10 +186,23 @@ class MockRepository extends LearnerRepository {
       return false;
     }
     state['session'] = id;
+    state.putIfAbsent(key('language'), () => state['language'] ?? 'en');
     state['remember'] = remember;
     await save();
     notifyListeners();
     return true;
+  }
+
+  String get language =>
+      (state['session'] == null ? null : state[key('language')]) as String? ??
+      state['language'] as String? ??
+      'en';
+  void setLanguage(String code) {
+    if (!school.languages.contains(code)) return;
+    state['language'] = code;
+    if (state['session'] != null) state[key('language')] = code;
+    save();
+    notifyListeners();
   }
 
   void logout() {
