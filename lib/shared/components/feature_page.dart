@@ -30,10 +30,12 @@ class FeaturePage extends StatelessWidget {
             child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 960),
+                    constraints: BoxConstraints(
+                        maxWidth: MediaQuery.sizeOf(context).width >= 1200
+                            ? 1200
+                            : 960),
                     child: Padding(
-                        padding: EdgeInsets.all(
-                            MediaQuery.sizeOf(context).width < 600 ? 20 : 32),
+                        padding: EdgeInsets.all(_pageGutter(context)),
                         child: scrollable
                             ? SingleChildScrollView(
                                 child: SizedBox(
@@ -57,6 +59,13 @@ class FeaturePage extends StatelessWidget {
                         runSpacing: 8,
                         children: actions))),
       );
+
+  double _pageGutter(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < 600) return 16;
+    if (width < 1000) return 24;
+    return 32;
+  }
 }
 
 class EntryScreen extends StatefulWidget {
