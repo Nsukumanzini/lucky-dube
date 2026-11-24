@@ -33,172 +33,416 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       'Rehearsals, creative work and collaboration'
     ];
     final icons = [
-      Icons.person_outline_rounded,
-      Icons.groups_outlined,
+      Icons.person_rounded,
+      Icons.groups_rounded,
       Icons.functions_rounded,
-      Icons.theater_comedy_outlined
+      Icons.theater_comedy_rounded
     ];
+    final unreadCount = channels.where((channel) {
+      final messages =
+          List<String>.from(repo.value('chat-$channel', <String>[]));
+      return messages.isNotEmpty && repo.value('read-$channel', false) != true;
+    }).length;
     final filtered = channels.asMap().entries.where((e) =>
         e.value.toLowerCase().contains(query) &&
         (filter == 'All' ||
             filter == 'Staff' && e.key == 0 ||
             filter == 'Groups' && e.key > 0));
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      LText('Messages',
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium
-              ?.copyWith(fontWeight: FontWeight.w800)),
-      const SizedBox(height: 8),
-      const LText(
-          'Your learning circle. Helpful conversations, in the right place.'),
-      const SizedBox(height: 24),
-      FrostedSurface(
-          tint: Theme.of(context).brightness == Brightness.light
-              ? const Color(0xe8eaf8f3)
-              : const Color(0xe8193b36),
-          padding: const EdgeInsets.all(22),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const AnimatedIconBadge(
-                icon: Icons.verified_user_outlined,
-                color: Color(0xff0c6c5d),
-                background: Color(0xffc8eadf),
-                size: 48),
-            const SizedBox(width: 16),
-            const Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  LText('Connected, with care',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
-                  SizedBox(height: 6),
+    final width = MediaQuery.sizeOf(context).width;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const LText(
+                    'YOUR LEARNING CIRCLE',
+                    style: TextStyle(
+                      color: Color(0xff0d9488),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
                   LText(
-                      'Staff-managed channels and moderated groups. Educator replies here are automated practice responses.',
-                      style: TextStyle(height: 1.5))
-                ]))
-          ])),
-      const SizedBox(height: 24),
-      TextField(
+                    'Messages',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.7,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            if (unreadCount > 0)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xffe9efff),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.mark_chat_unread_rounded,
+                        size: 16, color: Color(0xff3156d8)),
+                    const SizedBox(width: 6),
+                    LText('$unreadCount',
+                        style: const TextStyle(
+                            color: Color(0xff3156d8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(width: 4),
+                    const LText('unread',
+                        style: TextStyle(
+                            color: Color(0xff3156d8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const LText(
+            'Your learning circle. Helpful conversations, in the right place.'),
+        const SizedBox(height: 18),
+        LiquidGlassSurface(
+          padding: EdgeInsets.zero,
+          borderRadius: BorderRadius.circular(24),
+          tint: Theme.of(context).brightness == Brightness.light
+              ? const Color(0xeaf2f6ff)
+              : const Color(0xe51b2c49),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -28,
+                  top: -38,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xff59b7aa).withValues(alpha: .12),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(width < 600 ? 17 : 22),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const LText(
+                              'Connected, with care',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 16),
+                            ),
+                            const SizedBox(height: 6),
+                            const LText(
+                              'Staff-managed channels and moderated learning groups.',
+                              style: TextStyle(height: 1.45, fontSize: 12),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0x1c0d9488),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.verified_user_rounded,
+                                      size: 14, color: Color(0xff0d9488)),
+                                  SizedBox(width: 6),
+                                  LText('A thoughtful space to learn',
+                                      style: TextStyle(
+                                          color: Color(0xff0d776d),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 10)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (width >= 380)
+                        const AnimatedIconBadge(
+                          icon: Icons.forum_rounded,
+                          color: Color(0xff3156d8),
+                          background: Color(0x263156d8),
+                          size: 56,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        TextField(
           decoration: InputDecoration(
-              hintText: tr(context, 'Search conversations'),
-              prefixIcon: Icon(Icons.search_rounded)),
-          onChanged: (value) => setState(() => query = value.toLowerCase())),
-      const SizedBox(height: 14),
-      Wrap(
-          spacing: 8,
-          children: ['All', 'Staff', 'Groups']
-              .map((name) => ChoiceChip(
-                  label: LText(name),
-                  selected: filter == name,
-                  onSelected: (_) => setState(() => filter = name)))
-              .toList()),
-      const SizedBox(height: 20),
-      if (filtered.isEmpty)
-        const Padding(
-            padding: EdgeInsets.all(32),
-            child: LText(
-                'No conversations match your search. Try a different name or group.')),
-      for (final entry in filtered)
-        Builder(builder: (context) {
-          final i = entry.key, channel = entry.value;
-          final messages =
-              List<String>.from(repo.value('chat-$channel', <String>[]));
-          final unread =
-              messages.isNotEmpty && repo.value('read-$channel', false) != true;
-          final preview = messages.isEmpty
-              ? hints[i]
-              : messages.last
-                  .split('\n')
-                  .skip(1)
-                  .where((s) => s != 'Delivered locally')
-                  .join(' ');
-          final accent = learnerAccents[i];
-          return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+            hintText: tr(context, 'Search conversations'),
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: tr(context, 'Clear search'),
+                    onPressed: () => setState(() => query = ''),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+            filled: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (value) => setState(() => query = value.toLowerCase()),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final option in [
+                ('All', channels.length),
+                ('Staff', 1),
+                ('Groups', channels.length - 1),
+              ]) ...[
+                ChoiceChip(
+                  selected: filter == option.$1,
+                  onSelected: (_) => setState(() => filter = option.$1),
+                  avatar: Icon(
+                    option.$1 == 'All'
+                        ? Icons.forum_outlined
+                        : option.$1 == 'Staff'
+                            ? Icons.person_outline_rounded
+                            : Icons.groups_outlined,
+                    size: 16,
+                    color: filter == option.$1
+                        ? const Color(0xff3156d8)
+                        : const Color(0xff0d9488),
+                  ),
+                  label: LText('${option.$1}  ${option.$2}'),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (final entry in filtered)
+          Builder(builder: (context) {
+            final i = entry.key, channel = entry.value;
+            final messages =
+                List<String>.from(repo.value('chat-$channel', <String>[]));
+            final unread = messages.isNotEmpty &&
+                repo.value('read-$channel', false) != true;
+            final preview = messages.isEmpty
+                ? hints[i]
+                : messages.last
+                    .split('\n')
+                    .skip(1)
+                    .where((s) => s != 'Delivered locally')
+                    .join(' ');
+            final accent = learnerAccents[i];
+            final metadata = messages.isEmpty
+                ? ''
+                : messages.last
+                        .split('\n')
+                        .first
+                        .split(' • ')
+                        .skip(1)
+                        .firstOrNull ??
+                    '';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
               child: LiquidGlassSurface(
-                  padding: EdgeInsets.zero,
-                  borderRadius: BorderRadius.circular(22),
-                  child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                          onTap: () {
-                            repo.put('read-$channel', true);
-                            context.push(
-                                '/conversation/${Uri.encodeComponent(channel)}');
-                          },
-                          child: Padding(
-                              padding: const EdgeInsets.all(18),
-                              child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(22),
+                tint: unread
+                    ? (Theme.of(context).brightness == Brightness.light
+                        ? const Color(0xebf8faff)
+                        : const Color(0xeb1c2d49))
+                    : null,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(22),
+                    onTap: () {
+                      repo.put('read-$channel', true);
+                      context.push(
+                          '/conversation/${Uri.encodeComponent(channel)}');
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.all(width < 600 ? 14 : 17),
+                      child: Row(
+                        children: [
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              AnimatedIconBadge(
+                                  icon: icons[i], color: accent, size: 50),
+                              if (unread)
+                                Positioned(
+                                  right: -1,
+                                  bottom: -1,
+                                  child: Container(
+                                    width: 14,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xff3156d8),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 13),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    AnimatedIconBadge(
-                                        icon: icons[i],
-                                        color: accent,
-                                        size: 50),
-                                    const SizedBox(width: 16),
                                     Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                          Row(children: [
-                                            Expanded(
-                                                child: LText(
-                                                    channel.split(' • ').first,
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        fontSize: 16))),
-                                            if (unread)
-                                              Container(
-                                                  width: 9,
-                                                  height: 9,
-                                                  decoration: BoxDecoration(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                      shape: BoxShape.circle))
-                                          ]),
-                                          const SizedBox(height: 5),
-                                          LText(
-                                              i == 0
-                                                  ? 'CLASS TEACHER'
-                                                  : 'MODERATED GROUP',
-                                              style: TextStyle(
-                                                  color: accent,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w800,
-                                                  letterSpacing: 1)),
-                                          const SizedBox(height: 9),
-                                          Text(
-                                              messages.isEmpty ||
-                                                      messages.last.startsWith(
-                                                          'Educator')
-                                                  ? tr(context, preview)
-                                                  : preview,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
-                                                  height: 1.5)),
-                                          const SizedBox(height: 8),
-                                          LText(
-                                              messages.isEmpty
-                                                  ? 'Start a conversation'
-                                                  : 'Latest activity',
-                                              style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: Color(0xff64748b))),
-                                        ])),
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.chevron_right_rounded,
-                                        color: Color(0xff94a3b8))
-                                  ]))))));
-        })
-    ]);
+                                      child: LText(
+                                        channel.split(' • ').first,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: unread
+                                              ? FontWeight.w800
+                                              : FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+                                    if (metadata.isNotEmpty)
+                                      LText(metadata,
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Color(0xff64748b))),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      i == 0
+                                          ? Icons.badge_outlined
+                                          : Icons.shield_outlined,
+                                      size: 13,
+                                      color: accent,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    LText(
+                                      i == 0
+                                          ? 'STAFF CONVERSATION'
+                                          : 'MODERATED LEARNING GROUP',
+                                      style: TextStyle(
+                                        color: accent,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: .7,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 7),
+                                Text(
+                                  messages.isEmpty ||
+                                          messages.last.startsWith('Educator')
+                                      ? tr(context, preview)
+                                      : preview,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: unread
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                    fontWeight: unread
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(Icons.chevron_right_rounded,
+                              color: accent, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        if (filtered.isEmpty)
+          LiquidGlassSurface(
+            width: double.infinity,
+            child: Column(
+              children: [
+                const AnimatedIconBadge(
+                  icon: Icons.search_off_rounded,
+                  color: Color(0xff8055d9),
+                  size: 52,
+                ),
+                const SizedBox(height: 12),
+                const LText('No conversations found',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 5),
+                const LText(
+                    'Try another name or switch the conversation filter.'),
+                if (query.isNotEmpty)
+                  TextButton(
+                    onPressed: () => setState(() => query = ''),
+                    child: const LText('Clear search'),
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+        const Row(
+          children: [
+            Icon(Icons.lock_outline_rounded,
+                size: 14, color: Color(0xff0d9488)),
+            SizedBox(width: 6),
+            Expanded(
+              child: LText(
+                'Conversations stay within school-managed channels.',
+                style: TextStyle(fontSize: 10, color: Color(0xff64748b)),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 

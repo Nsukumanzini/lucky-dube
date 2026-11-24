@@ -238,8 +238,18 @@ const isiZuluCatalog = <String, String>{
   "Staff": "Othisha",
   "Groups": "Amaqembu",
   "Your learning circle. Helpful conversations, in the right place.":
-      "Abantu ofunda nabo. Izingxoxo eziwusizo endaweni efanele.",
+      "Umbuthano wakho wokufunda. Izingxoxo eziwusizo endaweni efanele.",
   "Connected, with care": "Sixhumene ngokunakekelana",
+  "YOUR LEARNING CIRCLE": "UMBUTHANO WAKHO WOKUFUNDA",
+  "unread": "akufundiwe",
+  "A thoughtful space to learn": "Indawo enokunakekela yokufunda",
+  "STAFF CONVERSATION": "INGXOXO NOTHISHA",
+  "MODERATED LEARNING GROUP": "IQEMBU LOKUFUNDA ELILAWULWAYO",
+  "No conversations found": "Azikho izingxoxo ezitholakele",
+  "Try another name or switch the conversation filter.":
+      "Zama elinye igama noma ushintshe isihlungi sezingxoxo.",
+  "Conversations stay within school-managed channels.":
+      "Izingxoxo zihlala eziteshini eziphethwe yisikole.",
   "Staff-managed channels and moderated groups. Educator replies here are automated practice responses.":
       "Iziteshi eziphethwe othisha namaqembu aqondiswayo. Izimpendulo zothisha lapha zizenzakalela ukuze uzilolonge.",
   "Search conversations": "Sesha izingxoxo",
