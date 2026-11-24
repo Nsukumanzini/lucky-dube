@@ -1,5 +1,6 @@
 // ignore: deprecated_member_use
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
@@ -231,6 +232,158 @@ class AnimatedIconBadge extends StatefulWidget {
 
   @override
   State<AnimatedIconBadge> createState() => _AnimatedIconBadgeState();
+}
+
+/// Small, locally painted learning motifs that drift with page scrolling.
+/// The overlay is decorative, pointer-transparent and intentionally subtle so
+/// it adds character without competing with lesson content.
+class LearnerScrollArt extends StatefulWidget {
+  final Widget child;
+  const LearnerScrollArt({super.key, required this.child});
+
+  @override
+  State<LearnerScrollArt> createState() => _LearnerScrollArtState();
+}
+
+class _LearnerScrollArtState extends State<LearnerScrollArt>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 7),
+  );
+  double _scroll = 0;
+  bool _reduceMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    if (reduce == _reduceMotion) return;
+    _reduceMotion = reduce;
+    if (reduce) {
+      _motion.stop();
+      _motion.value = .25;
+    } else {
+      _motion.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          final next = notification.metrics.pixels;
+          if ((next - _scroll).abs() > 18) {
+            setState(() => _scroll = next);
+          }
+          return false;
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            widget.child,
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: AnimatedBuilder(
+                    animation: _motion,
+                    builder: (context, _) => CustomPaint(
+                      painter: _LearnerArtPainter(
+                        progress: _motion.value,
+                        scroll: _scroll,
+                        dark: Theme.of(context).brightness == Brightness.dark,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _LearnerArtPainter extends CustomPainter {
+  final double progress;
+  final double scroll;
+  final bool dark;
+
+  const _LearnerArtPainter({
+    required this.progress,
+    required this.scroll,
+    required this.dark,
+  });
+
+  static const _icons = <IconData>[
+    Icons.auto_awesome_rounded,
+    Icons.menu_book_rounded,
+    Icons.music_note_rounded,
+    Icons.palette_rounded,
+    Icons.lightbulb_rounded,
+    Icons.spa_rounded,
+    Icons.draw_rounded,
+    Icons.school_rounded,
+  ];
+  static const _colors = <Color>[
+    Color(0xff3156d8),
+    Color(0xff0d9488),
+    Color(0xffe76a45),
+    Color(0xff8055d9),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final mobile = size.width < 600;
+    final diameter = mobile ? 26.0 : 32.0;
+    final x = size.width - (mobile ? 5 : 8) - diameter / 2;
+    final phase = progress * math.pi * 2;
+    for (var i = 0; i < 4; i++) {
+      final cycle = (i * .29 + scroll / (size.height * 2.2)) % 1;
+      final y = size.height * (.14 + cycle * .78) + math.sin(phase + i) * 5;
+      final color = _colors[(i + (scroll ~/ 240)) % _colors.length];
+      final center = Offset(x + math.sin(phase * .65 + i) * 3, y);
+      canvas.drawCircle(
+        center,
+        diameter * .58,
+        Paint()..color = color.withValues(alpha: dark ? .065 : .05),
+      );
+      canvas.drawCircle(
+        center,
+        diameter * .48,
+        Paint()
+          ..color = dark ? const Color(0x4cffffff) : const Color(0xbfffffff)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+      final icon = _icons[(i * 2 + (scroll ~/ 240)) % _icons.length];
+      final painter = TextPainter(textDirection: TextDirection.ltr)
+        ..text = TextSpan(
+          text: String.fromCharCode(icon.codePoint),
+          style: TextStyle(
+            fontFamily: icon.fontFamily,
+            package: icon.fontPackage,
+            fontSize: diameter * .43,
+            color: color.withValues(alpha: dark ? .4 : .34),
+          ),
+        )
+        ..layout();
+      painter.paint(
+          canvas, center - Offset(painter.width / 2, painter.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LearnerArtPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.scroll != scroll ||
+      oldDelegate.dark != dark;
 }
 
 class _AnimatedIconBadgeState extends State<AnimatedIconBadge> {

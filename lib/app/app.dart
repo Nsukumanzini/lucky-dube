@@ -86,13 +86,15 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
                 dark: Theme.of(context).brightness == Brightness.dark,
               ),
             ),
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  (repo.state['textScale'] as num?)?.toDouble() ?? 1,
+            LearnerScrollArt(
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(
+                    (repo.state['textScale'] as num?)?.toDouble() ?? 1,
+                  ),
                 ),
+                child: child!,
               ),
-              child: child!,
             ),
           ],
         ),
