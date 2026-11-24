@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../main.dart';
 import '../data/repository.dart';
+import '../shared/components/feature_page.dart';
 import '../shared/components/learner_visuals.dart';
 import '../shared/components/premium_surface.dart';
 
@@ -459,10 +460,47 @@ class _ConversationScreenState extends State<ConversationScreen> {
   final text = TextEditingController();
   final scroll = ScrollController();
   bool muted = false;
+  List<String> get groupMembers {
+    final learner = widget.repo.learner;
+    final classOnly = widget.channel.contains('Moderated class group');
+    final learners = widget.repo.learners.where((person) => classOnly
+        ? person.group == learner.group
+        : person.grade == learner.grade);
+    return [
+      '${MockRepository.teachers[0]} • Educator',
+      ...learners.map((person) => '${person.name} • Grade ${person.grade}'),
+    ];
+  }
+
+  List<String> initialGroupMessages() {
+    final names = groupMembers.skip(1).take(2).toList();
+    final prompt = widget.channel.contains('Mathematics')
+        ? 'I checked my pattern rule with a second example. That helped me spot a small mistake.'
+        : widget.channel.contains('Performing arts')
+            ? 'I am practising the rhythm slowly first, then putting the parts together.'
+            : 'I wrote my main idea in my own words before starting the task.';
+    final reply = widget.channel.contains('Performing arts')
+        ? 'That sounds helpful. I am going to try the same warm-up before rehearsal.'
+        : 'That is a good approach. Checking each step makes the answer clearer.';
+    return [
+      'Educator • 08:00\nWelcome! Keep this space respectful, ask questions and help each other learn.',
+      if (names.isNotEmpty) '${names[0].split(' • ').first} • 08:12\n$prompt',
+      if (names.length > 1) '${names[1].split(' • ').first} • 08:16\n$reply',
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
     muted = widget.repo.value('mute-${widget.channel}', false) as bool;
+    if (!widget.channel.contains('Class teacher') &&
+        widget.repo.value('chat-${widget.channel}') == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.repo.value('chat-${widget.channel}') == null) {
+          widget.repo.put('chat-${widget.channel}', initialGroupMessages());
+        }
+      });
+    }
   }
 
   @override
@@ -476,6 +514,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (body.trim().isEmpty) return;
     final key = 'chat-${widget.channel}';
     final list = List<String>.from(widget.repo.value(key, <String>[]));
+    if (list.isEmpty && !widget.channel.contains('Class teacher')) {
+      list.addAll(initialGroupMessages());
+    }
     list.add('You • 10:20\n${body.trim()}\nDelivered locally');
     list.add(
         'Educator • 10:21 • Automated practice reply\nThank you for your message. Review the study guide and bring your questions to our next lesson.');
@@ -498,8 +539,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   Widget build(BuildContext context) {
     final group = !widget.channel.contains('Class teacher');
+    final members = group ? groupMembers : const <String>[];
     final messages = List<String>.from(
         widget.repo.value('chat-${widget.channel}', <String>[]));
+    if (group && messages.isEmpty) messages.addAll(initialGroupMessages());
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 72,
@@ -561,7 +604,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   const SizedBox(height: 2),
                   LText(
                     group
-                        ? 'Moderated learning group'
+                        ? 'Learning group • ${members.length} members'
                         : 'Class teacher • Staff-managed',
                     style: const TextStyle(
                       fontSize: 11,
@@ -574,6 +617,24 @@ class _ConversationScreenState extends State<ConversationScreen> {
           ],
         ),
         actions: [
+          if (group)
+            IconButton(
+              tooltip: tr(context, 'Group information'),
+              icon: const Icon(Icons.info_outline_rounded),
+              onPressed: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => GroupChatDetailsScreen(
+                    channel: widget.channel,
+                    members: members,
+                    muted: muted,
+                    onMuteChanged: (value) {
+                      setState(() => muted = value);
+                      widget.repo.put('mute-${widget.channel}', value);
+                    },
+                  ),
+                ),
+              ),
+            ),
           PopupMenuButton<String>(
             tooltip: tr(context, 'Conversation options'),
             icon: const Icon(Icons.more_vert_rounded),
@@ -622,37 +683,110 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     tint: Theme.of(context).brightness == Brightness.light
                         ? const Color(0xdff0fbf7)
                         : const Color(0xdc153c38),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AnimatedIconBadge(
-                          icon: Icons.shield_rounded,
-                          color: Color(0xff0d9488),
-                          size: 34,
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              LText(
-                                'School-managed conversation',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700, fontSize: 12),
+                        Row(
+                          children: [
+                            const AnimatedIconBadge(
+                              icon: Icons.shield_rounded,
+                              color: Color(0xff0d9488),
+                              size: 34,
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  LText(
+                                    'School-managed conversation',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12),
+                                  ),
+                                  SizedBox(height: 3),
+                                  LText(
+                                    'Automated practice replies may appear here.',
+                                    style:
+                                        TextStyle(fontSize: 11, height: 1.35),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 3),
-                              LText(
-                                'Automated practice replies may appear here.',
-                                style: TextStyle(fontSize: 11, height: 1.35),
+                            ),
+                            if (muted)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: Icon(Icons.notifications_off_rounded,
+                                    size: 18),
+                              ),
+                          ],
+                        ),
+                        if (group) ...[
+                          const SizedBox(height: 12),
+                          Divider(
+                            height: 1,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: .5),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              for (final member in members.take(4)) ...[
+                                CircleAvatar(
+                                  radius: 13,
+                                  backgroundColor: const Color(0xffe9efff),
+                                  child: Text(
+                                    member
+                                        .split(' • ')
+                                        .first
+                                        .split(' ')
+                                        .take(2)
+                                        .map((part) =>
+                                            part.isEmpty ? '' : part[0])
+                                        .join(),
+                                    style: const TextStyle(
+                                      color: Color(0xff3156d8),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: LText(
+                                  '${members.length} participants • Educator moderated',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Color(0xff64748b),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) => GroupChatDetailsScreen(
+                                      channel: widget.channel,
+                                      members: members,
+                                      muted: muted,
+                                      onMuteChanged: (value) {
+                                        setState(() => muted = value);
+                                        widget.repo.put(
+                                            'mute-${widget.channel}', value);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                child: const LText('View group'),
                               ),
                             ],
                           ),
-                        ),
-                        if (muted)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child:
-                                Icon(Icons.notifications_off_rounded, size: 18),
-                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -662,6 +796,33 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     controller: scroll,
                     padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
                     children: [
+                      if (group)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: LiquidGlassSurface(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 11),
+                            borderRadius: BorderRadius.circular(16),
+                            blur: 8,
+                            tint:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? const Color(0xdffef8e8)
+                                    : const Color(0xd944351a),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.push_pin_rounded,
+                                    size: 16, color: Color(0xffd18a00)),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: LText(
+                                    'Pinned • Keep the conversation helpful, respectful and on topic.',
+                                    style: TextStyle(fontSize: 11, height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       Center(
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 20),
@@ -681,10 +842,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 fontSize: 11, fontWeight: FontWeight.w700),
                           ),
                         ),
-                      ),
-                      const MessageBubble(
-                        message:
-                            'Educator • 08:00\nWelcome! Keep this space respectful, ask questions and help each other learn.',
                       ),
                       for (var i = 0; i < messages.length; i++)
                         MessageBubble(
@@ -777,6 +934,115 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 }
 
+class GroupChatDetailsScreen extends StatefulWidget {
+  final String channel;
+  final List<String> members;
+  final bool muted;
+  final ValueChanged<bool> onMuteChanged;
+
+  const GroupChatDetailsScreen({
+    super.key,
+    required this.channel,
+    required this.members,
+    required this.muted,
+    required this.onMuteChanged,
+  });
+
+  @override
+  State<GroupChatDetailsScreen> createState() => _GroupChatDetailsScreenState();
+}
+
+class _GroupChatDetailsScreenState extends State<GroupChatDetailsScreen> {
+  late bool muted = widget.muted;
+
+  @override
+  Widget build(BuildContext context) => FeaturePage(
+        title: const LText('Group information'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  const AnimatedIconBadge(
+                    icon: Icons.groups_rounded,
+                    color: Color(0xff3156d8),
+                    background: Color(0x263156d8),
+                    size: 76,
+                  ),
+                  const SizedBox(height: 14),
+                  LText(widget.channel.split(' • ').first,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 5),
+                  LText(
+                      '${widget.members.length} members • Moderated learning group',
+                      style: const TextStyle(color: Color(0xff64748b))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 26),
+            const LText('Members',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+            const SizedBox(height: 10),
+            for (var i = 0; i < widget.members.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: LiquidGlassSurface(
+                  padding: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: i == 0
+                          ? const Color(0xffddf4ec)
+                          : const Color(0xffe9efff),
+                      child: Icon(
+                        i == 0 ? Icons.school_rounded : Icons.person_rounded,
+                        color: i == 0
+                            ? const Color(0xff0d9488)
+                            : const Color(0xff3156d8),
+                      ),
+                    ),
+                    title: LText(widget.members[i].split(' • ').first),
+                    subtitle: LText(widget.members[i].split(' • ').last),
+                    trailing: i == 0
+                        ? const Icon(Icons.verified_user_rounded,
+                            color: Color(0xff0d9488), size: 18)
+                        : null,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 18),
+            const LiquidGlassSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LText('Group guidelines',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  SizedBox(height: 8),
+                  LText(
+                    'Keep messages kind, relevant to learning and respectful of everyone. This school-managed group is moderated; do not share personal contact details.',
+                    style: TextStyle(height: 1.55),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() => muted = !muted);
+              widget.onMuteChanged(muted);
+            },
+            icon: Icon(muted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined),
+            label: LText(muted ? 'Unmute group' : 'Mute group'),
+          ),
+        ],
+      );
+}
+
 class MessageBubble extends StatelessWidget {
   final String message;
   const MessageBubble({super.key, required this.message});
@@ -794,6 +1060,7 @@ class MessageBubble extends StatelessWidget {
     final educator = !sent;
     final automated =
         parts.first.contains('Automated') || parts.first.contains('Simulated');
+    final sender = header.first;
     final content = ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 570),
       child: Column(
@@ -807,7 +1074,7 @@ class MessageBubble extends StatelessWidget {
                   ? 'You'
                   : automated
                       ? 'Educator • Automated practice reply'
-                      : 'Educator',
+                      : sender,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -902,12 +1169,21 @@ class MessageBubble extends StatelessWidget {
           if (educator) ...[
             CircleAvatar(
               radius: 15,
-              backgroundColor: const Color(0xffdff3ed),
-              child: Icon(
-                automated ? Icons.auto_awesome_rounded : Icons.person_rounded,
-                size: 16,
-                color: const Color(0xff0d9488),
-              ),
+              backgroundColor:
+                  automated ? const Color(0xffdff3ed) : const Color(0xffe9efff),
+              child: automated
+                  ? const Icon(Icons.auto_awesome_rounded,
+                      size: 16, color: Color(0xff0d9488))
+                  : Text(
+                      sender.trim().isEmpty
+                          ? '?'
+                          : sender.trim()[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xff3156d8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
             ),
             const SizedBox(width: 8),
           ],
