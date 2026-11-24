@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import '../data/repository.dart';
@@ -24,6 +25,7 @@ class Portal extends ConsumerStatefulWidget {
 
 class _PortalState extends ConsumerState<Portal> {
   String query = '', filter = 'All';
+  String? lessonSubject;
   int onboarding = 0, week = 0;
   DateTime day = DateTime(2026, 11, 26);
   bool weekly = false;
@@ -39,6 +41,7 @@ class _PortalState extends ConsumerState<Portal> {
     setState(() {
       query = '';
       filter = 'All';
+      lessonSubject = null;
     });
     context.go('/$page');
   }
@@ -591,6 +594,11 @@ class _PortalState extends ConsumerState<Portal> {
         return home();
       case 'subjects':
         return catalogue();
+      case 'lessons':
+        return lessons();
+      case 'quizzes':
+      case 'assessments':
+        return quizzes();
       case 'calendar':
         return calendar();
       case 'messages':
@@ -601,7 +609,6 @@ class _PortalState extends ConsumerState<Portal> {
         return settings();
       case 'resources':
       case 'homework':
-      case 'assessments':
       case 'results':
         return catalogue();
       case 'timetable':
@@ -726,11 +733,211 @@ class _PortalState extends ConsumerState<Portal> {
       );
   String slug(String s) =>
       {
+        'Lessons': 'lessons',
+        'Quizzes': 'quizzes',
         'Homework': 'homework',
         'Assessments': 'assessments',
         'Performing arts': 'performing-arts',
       }[s] ??
       s.toLowerCase();
+
+  Widget lessons() {
+    final subjects = r.subjects(r.learner.grade);
+    final materials = r
+        .lessonMaterials()
+        .where((item) => filter == 'All' || item.type == filter)
+        .where((item) => lessonSubject == null || item.subject == lessonSubject)
+        .where((item) =>
+            query.isEmpty ||
+            '${item.title} ${item.subject} ${item.topic} ${item.type}'
+                .toLowerCase()
+                .contains(query));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading(
+          'Lessons',
+          'Videos, lesson slides and study notes • Grade ${r.learner.grade}',
+        ),
+        search(['All', 'Video', 'Slides', 'Notes']),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: DropdownButtonFormField<String?>(
+            initialValue: lessonSubject,
+            decoration: const InputDecoration(labelText: 'Filter by subject'),
+            items: [
+              const DropdownMenuItem<String?>(
+                  value: null, child: LText('All subjects')),
+              for (final subject in subjects)
+                DropdownMenuItem<String?>(
+                    value: subject, child: LText(subject)),
+            ],
+            onChanged: (value) => setState(() => lessonSubject = value),
+          ),
+        ),
+        for (final item in materials)
+          LiquidGlassSurface(
+            padding: EdgeInsets.zero,
+            child: tile(
+              item.title,
+              '${item.subject} • ${item.type} • ${item.description}',
+              item.type == 'Video'
+                  ? Icons.play_circle_fill_rounded
+                  : item.type == 'Slides'
+                      ? Icons.slideshow_rounded
+                      : Icons.notes_rounded,
+              () => openLessonMaterial(item),
+            ),
+          ),
+        if (materials.isEmpty)
+          const LiquidGlassSurface(
+            child: LText(
+                'No lessons match those filters. Try another subject or search.'),
+          ),
+      ],
+    );
+  }
+
+  void openLessonMaterial(LessonMaterial item) {
+    Navigator.of(context).push<void>(MaterialPageRoute(
+      builder: (_) => FeaturePage(
+        title: LText(item.type == 'Video' ? 'Video lesson' : item.type),
+        content: _lessonMaterialDetail(item),
+        actions: [
+          if (item.type == 'Video')
+            FilledButton.icon(
+              onPressed: () async {
+                final uri = Uri.https('www.youtube.com', '/results', {
+                  'search_query': item.searchQuery,
+                });
+                final opened = await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                );
+                if (!opened && mounted) {
+                  toast('YouTube could not be opened on this device.');
+                }
+              },
+              icon: const Icon(Icons.open_in_new_rounded),
+              label: const LText('Find videos on YouTube'),
+            ),
+        ],
+      ),
+    ));
+  }
+
+  Widget _lessonMaterialDetail(LessonMaterial item) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(item.subject.toUpperCase(),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.3,
+              )),
+          const SizedBox(height: 8),
+          LText(item.title, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
+          LText(item.description),
+          const SizedBox(height: 20),
+          if (item.type == 'Video') ...[
+            const LiquidGlassSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.video_library_rounded, size: 34),
+                  SizedBox(height: 12),
+                  LText('Explore a video lesson',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  LText(
+                      'Search YouTube for a topic-specific video. Video results open outside the app when you choose to continue.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            LText('Suggested search: ${item.searchQuery}'),
+            const SizedBox(height: 18),
+            LText(item.body),
+          ] else if (item.type == 'Slides') ...[
+            for (final entry in item.body.split('\n\n').indexed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: LiquidGlassSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedIconBadge(
+                        icon: Icons.auto_awesome_rounded,
+                        color: learnerAccents[entry.$1 % learnerAccents.length],
+                        size: 38,
+                      ),
+                      const SizedBox(height: 10),
+                      LText(entry.$2, style: const TextStyle(height: 1.65)),
+                    ],
+                  ),
+                ),
+              ),
+          ] else
+            LiquidGlassSurface(
+              child: LText(item.body,
+                  style: const TextStyle(height: 1.8, fontSize: 15)),
+            ),
+        ],
+      );
+
+  Widget quizzes() {
+    final quizzes = r.content('Quiz').where((item) {
+      final score = r.value('quiz-${item.id}');
+      final matchesStatus = filter == 'All' ||
+          (filter == 'Completed' && score != null) ||
+          (filter == 'To practise' && score == null);
+      final matchesQuery = query.isEmpty ||
+          '${item.title} ${item.subject}'.toLowerCase().contains(query);
+      return matchesStatus && matchesQuery;
+    }).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading(
+          'Practice quizzes',
+          'Build confidence with short, self-marking practice • Grade ${r.learner.grade}',
+        ),
+        search(['All', 'To practise', 'Completed']),
+        for (final item in quizzes)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: LiquidGlassSurface(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                leading: AnimatedIconBadge(
+                  icon: Icons.quiz_rounded,
+                  color: learnerAccents[
+                      r.subjects(r.learner.grade).indexOf(item.subject) %
+                          learnerAccents.length],
+                  size: 48,
+                ),
+                title: LText(item.title),
+                subtitle: LText(
+                  '${item.subject} • Term ${item.term} • 5 min • Practice only'
+                  '${r.value('quiz-${item.id}') == null ? '' : ' • Last score ${r.value('quiz-${item.id}')}/3'}',
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                onTap: () => openItem(item),
+              ),
+            ),
+          ),
+        if (quizzes.isEmpty)
+          const LiquidGlassSurface(
+            child: LText(
+                'No quizzes match those filters. Try another search or status.'),
+          ),
+      ],
+    );
+  }
+
   Widget stat(String title, String value, String sub, double width) {
     final index = [
       'Learning progress',

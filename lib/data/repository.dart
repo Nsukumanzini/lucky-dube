@@ -25,9 +25,10 @@ class SchoolConfiguration {
     this.terms = const ['Term 1', 'Term 2', 'Term 3', 'Term 4'],
     this.modules = const [
       'Subjects',
+      'Lessons',
+      'Quizzes',
       'Resources',
       'Homework',
-      'Assessments',
       'Results',
       'Timetable',
       'Attendance',
@@ -63,6 +64,24 @@ class LearningItem {
     this.body,
     this.grade, {
     this.term = 4,
+  });
+}
+
+@immutable
+class LessonMaterial {
+  final String id, title, subject, topic, type, description, body;
+  final int grade;
+  final String? searchQuery;
+  const LessonMaterial({
+    required this.id,
+    required this.title,
+    required this.subject,
+    required this.topic,
+    required this.type,
+    required this.description,
+    required this.body,
+    required this.grade,
+    this.searchQuery,
   });
 }
 
@@ -165,6 +184,63 @@ class MockRepository extends LearnerRepository {
       ];
   List<LearningItem> content(String kind) =>
       items.where((e) => e.grade == learner.grade && e.kind == kind).toList();
+  List<LessonMaterial> lessonMaterials([int? grade]) {
+    final selectedGrade = grade ?? learner.grade;
+    return [
+      for (final subject in subjects(selectedGrade)) ...[
+        LessonMaterial(
+          id: '$selectedGrade-$subject-video',
+          title: '$subject: ${_topic(subject)}',
+          subject: subject,
+          topic: _topic(subject),
+          type: 'Video',
+          description: 'Teacher selected YouTube learning search',
+          body:
+              'Use this search to find a video lesson for Grade $selectedGrade on ${_topic(subject)}. Preview the title and channel before watching, then write down one new idea and one question to discuss in class.',
+          grade: selectedGrade,
+          searchQuery:
+              '$subject Grade $selectedGrade South Africa ${_topic(subject)} lesson',
+        ),
+        LessonMaterial(
+          id: '$selectedGrade-$subject-slides',
+          title: '${_topic(subject)} • lesson slides',
+          subject: subject,
+          topic: _topic(subject),
+          type: 'Slides',
+          description: '4 slide learning outline',
+          body:
+              'Slide 1 • Start with what you already know about ${_topic(subject)}.\n\nSlide 2 • Identify the key terms and describe each one in your own words.\n\nSlide 3 • Work through a clear example, showing each step.\n\nSlide 4 • Check your understanding: explain one idea and create a question for your next lesson.',
+          grade: selectedGrade,
+        ),
+        LessonMaterial(
+          id: '$selectedGrade-$subject-notes',
+          title: '${_topic(subject)} • study notes',
+          subject: subject,
+          topic: _topic(subject),
+          type: 'Notes',
+          description: 'Original revision notes • 5 min read',
+          body:
+              'Learning focus\n${_topic(subject)}\n\nKey idea\nBreak the topic into smaller parts. Connect each new term to an example you understand, then explain how the parts fit together.\n\nStudy steps\n1. Read the lesson objective.\n2. Make a short glossary in your own words.\n3. Practise with an example.\n4. Check your reasoning and correct any gaps.\n\nReflection\nWhat can you now explain clearly? What would you like your educator to explain again?',
+          grade: selectedGrade,
+        ),
+      ],
+    ];
+  }
+
+  String _topic(String subject) => switch (subject) {
+        'Mathematics' => 'Patterns and relationships',
+        'English' => 'Reading for meaning',
+        'IsiZulu' => 'Ukufunda nokuqonda',
+        'Natural Sciences' => 'Matter and materials',
+        'Social Sciences' => 'People, places and change',
+        'Technology' => 'Design process',
+        'Economic and Management Sciences' => 'Needs, wants and choices',
+        'Life Orientation' => 'Healthy choices and wellbeing',
+        'Creative Arts' || 'Music' => 'Rhythm and creative expression',
+        'Geography' => 'Map skills and place',
+        'Dramatic Arts' => 'Character and performance',
+        _ => 'Core ideas and practice',
+      };
   String key(String id) => '${learner.id}:$id';
   dynamic value(String id, [dynamic fallback]) => state[key(id)] ?? fallback;
   @override
