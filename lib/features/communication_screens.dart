@@ -258,158 +258,277 @@ class _ConversationScreenState extends State<ConversationScreen> {
         widget.repo.value('chat-${widget.channel}', <String>[]));
     return Scaffold(
       appBar: AppBar(
-          flexibleSpace: const LiquidGlassBar(),
-          leading: BackButton(onPressed: () {
+        toolbarHeight: 72,
+        flexibleSpace: const LiquidGlassBar(),
+        leading: BackButton(
+          onPressed: () {
             widget.repo.put('read-${widget.channel}', true);
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
               context.go('/messages');
             }
-          }),
-          title: Row(children: [
-            CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(
-                    group ? Icons.groups_outlined : Icons.person_outline,
-                    color: Theme.of(context).colorScheme.primary)),
+          },
+        ),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xffe7efff),
+                  child: Icon(
+                    group ? Icons.groups_rounded : Icons.person_rounded,
+                    color: const Color(0xff3156d8),
+                  ),
+                ),
+                Positioned(
+                  right: -1,
+                  bottom: -1,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xff16a34a),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(width: 12),
             Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  LText(widget.channel.split(' • ').first,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   LText(
-                      group
-                          ? 'Moderated learning group'
-                          : 'Class teacher • Staff-managed',
-                      style: const TextStyle(
-                          fontSize: 11, color: Color(0xff64748b)))
-                ]))
-          ]),
-          actions: [
-            PopupMenuButton<String>(
-                tooltip: tr(context, 'Conversation options'),
-                onSelected: (action) {
-                  if (action == 'mute') {
-                    setState(() => muted = !muted);
-                    widget.repo.put('mute-${widget.channel}', muted);
-                  } else {
-                    widget.repo.put('reported-${widget.channel}', true);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: LText(
-                            'Report saved locally only. For real support, contact a responsible adult.')));
-                  }
-                },
-                itemBuilder: (_) => [
-                      PopupMenuItem(
-                          value: 'mute',
-                          child: LText(muted
-                              ? 'Unmute conversation'
-                              : 'Mute conversation')),
-                      const PopupMenuItem(
-                          value: 'report', child: LText('Report communication'))
-                    ])
-          ]),
+                    widget.channel.split(' • ').first,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  LText(
+                    group
+                        ? 'Moderated learning group'
+                        : 'Class teacher • Staff-managed',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xff64748b),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: tr(context, 'Conversation options'),
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (action) {
+              if (action == 'mute') {
+                setState(() => muted = !muted);
+                widget.repo.put('mute-${widget.channel}', muted);
+              } else {
+                widget.repo.put('reported-${widget.channel}', true);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: LText(
+                    'Report saved locally only. For real support, contact a responsible adult.',
+                  ),
+                ));
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'mute',
+                child:
+                    LText(muted ? 'Unmute conversation' : 'Mute conversation'),
+              ),
+              const PopupMenuItem(
+                value: 'report',
+                child: LText('Report communication'),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: SafeArea(
-          child: Center(
-              child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 980),
-                  child: Column(children: [
-                    LiquidGlassSurface(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        borderRadius: BorderRadius.zero,
-                        blur: 14,
-                        tint: Theme.of(context).brightness == Brightness.light
-                            ? const Color(0xb5eaf8f3)
-                            : const Color(0xbc153c38),
-                        child: Row(children: [
-                          const Icon(Icons.shield_outlined,
-                              size: 17, color: Color(0xff0d9488)),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                              child: LText(
-                                  'Practice channel • Automated replies',
-                                  style: TextStyle(fontSize: 12))),
-                          if (muted)
-                            const Icon(Icons.notifications_off_outlined,
-                                size: 17)
-                        ])),
-                    Expanded(
-                        child: ListView(
-                            controller: scroll,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: LiquidGlassSurface(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    borderRadius: BorderRadius.circular(18),
+                    blur: 12,
+                    tint: Theme.of(context).brightness == Brightness.light
+                        ? const Color(0xdff0fbf7)
+                        : const Color(0xdc153c38),
+                    child: Row(
+                      children: [
+                        const AnimatedIconBadge(
+                          icon: Icons.shield_rounded,
+                          color: Color(0xff0d9488),
+                          size: 34,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                          const Center(
-                              child: Chip(
-                                  label: LText('26 November 2026',
-                                      style: TextStyle(fontSize: 11)))),
-                          const SizedBox(height: 22),
-                          const MessageBubble(
-                              message:
-                                  'Educator • 08:00\nWelcome! Keep this space respectful, ask questions and help each other learn.'),
-                          for (var i = 0; i < messages.length; i++)
-                            MessageBubble(
-                                key: ValueKey('$i-${messages[i]}'),
-                                message: messages[i]),
-                        ])),
-                    LiquidGlassSurface(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(22)),
-                        blur: 20,
-                        tint: Theme.of(context).brightness == Brightness.light
-                            ? const Color(0xcaffffff)
-                            : const Color(0xce16233a),
-                        child: Column(children: [
-                          Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                IconButton(
-                                    tooltip: tr(context, 'Share attachment'),
-                                    onPressed: () async {
-                                      final files =
-                                          await FilePicker.platform.pickFiles();
-                                      if (files != null && mounted) {
-                                        send(
-                                            'Attachment: ${files.names.join(', ')}');
-                                      }
-                                    },
-                                    icon: const Icon(
-                                        Icons.add_circle_outline_rounded)),
-                                Expanded(
-                                    child: TextField(
-                                        controller: text,
-                                        minLines: 1,
-                                        maxLines: 4,
-                                        textInputAction: TextInputAction.send,
-                                        decoration: InputDecoration(
-                                            hintText: tr(context,
-                                                'Write a thoughtful message…'),
-                                            labelText: tr(context,
-                                                'Reply to this channel')),
-                                        onSubmitted: send)),
-                                const SizedBox(width: 10),
-                                IconButton.filled(
-                                    tooltip: tr(context, 'Send message'),
-                                    onPressed: () => send(text.text),
-                                    icon: const Icon(Icons.send_rounded)),
-                              ]),
-                          const SizedBox(height: 10),
-                          const LText(
-                              'School-authorised conversations • Stored on this device',
-                              style: TextStyle(
-                                  fontSize: 10, color: Color(0xff64748b)))
-                        ]))
-                  ])))),
+                              LText(
+                                'School-managed conversation',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700, fontSize: 12),
+                              ),
+                              SizedBox(height: 3),
+                              LText(
+                                'Automated practice replies may appear here.',
+                                style: TextStyle(fontSize: 11, height: 1.35),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (muted)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child:
+                                Icon(Icons.notifications_off_rounded, size: 18),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scroll,
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
+                    children: [
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? const Color(0xdfffffff)
+                                    : const Color(0xc91a2740),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0x223156d8)),
+                          ),
+                          child: const LText(
+                            'Thursday, 26 November',
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                      const MessageBubble(
+                        message:
+                            'Educator • 08:00\nWelcome! Keep this space respectful, ask questions and help each other learn.',
+                      ),
+                      for (var i = 0; i < messages.length; i++)
+                        MessageBubble(
+                          key: ValueKey('$i-${messages[i]}'),
+                          message: messages[i],
+                        ),
+                    ],
+                  ),
+                ),
+                LiquidGlassSurface(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(24)),
+                  blur: 20,
+                  tint: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0xeaffffff)
+                      : const Color(0xe016233a),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            tooltip: tr(context, 'Share attachment'),
+                            onPressed: () async {
+                              final files =
+                                  await FilePicker.platform.pickFiles();
+                              if (files != null && mounted) {
+                                send('Attachment: ${files.names.join(', ')}');
+                              }
+                            },
+                            icon: const Icon(Icons.add_circle_outline_rounded),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: text,
+                              minLines: 1,
+                              maxLines: 4,
+                              textInputAction: TextInputAction.send,
+                              decoration: InputDecoration(
+                                hintText:
+                                    tr(context, 'Write a thoughtful message…'),
+                                filled: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 13),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(22),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                              onSubmitted: send,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton.filled(
+                            tooltip: tr(context, 'Send message'),
+                            onPressed: text.text.trim().isEmpty
+                                ? null
+                                : () => send(text.text),
+                            icon: const Icon(Icons.send_rounded),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.lock_outline_rounded,
+                              size: 13, color: Color(0xff64748b)),
+                          SizedBox(width: 5),
+                          LText(
+                            'School-authorised conversations • Stored on this device',
+                            style: TextStyle(
+                                fontSize: 10, color: Color(0xff64748b)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -417,6 +536,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
 class MessageBubble extends StatelessWidget {
   final String message;
   const MessageBubble({super.key, required this.message});
+
   @override
   Widget build(BuildContext context) {
     final sent = message.startsWith('You');
@@ -426,98 +546,136 @@ class MessageBubble extends StatelessWidget {
         .where((s) => s != 'Delivered locally')
         .join('\n')
         .replaceFirst('Demonstration attachment:', 'Attachment:');
+    final header = parts.first.split(' • ');
+    final educator = !sent;
+    final automated =
+        parts.first.contains('Automated') || parts.first.contains('Simulated');
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 570),
+      child: Column(
+        crossAxisAlignment:
+            sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6, left: 4, right: 4),
+            child: LText(
+              sent
+                  ? 'You'
+                  : automated
+                      ? 'Educator • Automated practice reply'
+                      : 'Educator',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xff64748b),
+              ),
+            ),
+          ),
+          LiquidGlassSurface(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(20),
+              topRight: const Radius.circular(20),
+              bottomLeft: Radius.circular(sent ? 20 : 6),
+              bottomRight: Radius.circular(sent ? 6 : 20),
+            ),
+            blur: sent ? 8 : 12,
+            tint: sent
+                ? const Color(0xe63156d8)
+                : Theme.of(context).brightness == Brightness.light
+                    ? const Color(0xeaffffff)
+                    : const Color(0xd91a2740),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (body.startsWith('Attachment:')) ...[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file_rounded,
+                        size: 18,
+                        color: sent ? Colors.white : const Color(0xff3156d8),
+                      ),
+                      const SizedBox(width: 7),
+                      LText(
+                        'Attachment',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: sent ? Colors.white : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                ],
+                Text(
+                  message.startsWith('Educator') ? tr(context, body) : body,
+                  style: TextStyle(
+                    color: sent
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.onSurface,
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LText(
+                      header.length > 1 ? header[1] : '08:00',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: sent ? Colors.white70 : const Color(0xff64748b),
+                      ),
+                    ),
+                    if (sent) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.done_all_rounded,
+                          size: 14, color: Colors.white70),
+                      const SizedBox(width: 4),
+                      const LText(
+                        'Saved locally',
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-        child: Align(
-            alignment: sent ? Alignment.centerRight : Alignment.centerLeft,
-            child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 570),
-                child: FractionallySizedBox(
-                    widthFactor: .92,
-                    alignment:
-                        sent ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Column(
-                        crossAxisAlignment: sent
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: 6, left: 4, right: 4),
-                              child: LText(
-                                  sent
-                                      ? 'You'
-                                      : (parts.first.contains('Simulated') ||
-                                              parts.first.contains('Automated'))
-                                          ? 'Educator • Automated practice reply'
-                                          : 'Educator',
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xff64748b)))),
-                          LiquidGlassSurface(
-                              padding: const EdgeInsets.all(17),
-                              borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(20),
-                                  topRight: const Radius.circular(20),
-                                  bottomLeft: Radius.circular(sent ? 20 : 5),
-                                  bottomRight: Radius.circular(sent ? 5 : 20)),
-                              blur: 16,
-                              tint: sent
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: .82)
-                                  : null,
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (body.startsWith('Attachment:'))
-                                      Icon(Icons.insert_drive_file_outlined,
-                                          color: sent
-                                              ? Colors.white
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .primary),
-                                    Text(
-                                        message.startsWith('Educator')
-                                            ? tr(context, body)
-                                            : body,
-                                        style: TextStyle(
-                                            color: sent
-                                                ? Colors.white
-                                                : Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                            height: 1.6)),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          LText(
-                                              parts.first.split(' • ').length >
-                                                      1
-                                                  ? parts.first.split(' • ')[1]
-                                                  : '08:00',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: sent
-                                                      ? Colors.white70
-                                                      : const Color(
-                                                          0xff64748b))),
-                                          if (sent) ...[
-                                            const SizedBox(width: 6),
-                                            const Icon(Icons.done_all,
-                                                size: 13,
-                                                color: Colors.white70),
-                                            const SizedBox(width: 4),
-                                            const LText('Saved locally',
-                                                style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.white70))
-                                          ]
-                                        ])
-                                  ])),
-                        ])))));
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        mainAxisAlignment:
+            sent ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (educator) ...[
+            CircleAvatar(
+              radius: 15,
+              backgroundColor: const Color(0xffdff3ed),
+              child: Icon(
+                automated ? Icons.auto_awesome_rounded : Icons.person_rounded,
+                size: 16,
+                color: const Color(0xff0d9488),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: FractionallySizedBox(
+              widthFactor: sent ? .9 : .94,
+              alignment: sent ? Alignment.centerRight : Alignment.centerLeft,
+              child: content,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
