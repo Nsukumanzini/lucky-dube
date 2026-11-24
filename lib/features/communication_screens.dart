@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import '../main.dart';
 import '../data/repository.dart';
 import '../shared/components/learner_visuals.dart';
+import '../shared/components/premium_surface.dart';
 
 class InboxScreen extends ConsumerStatefulWidget {
   const InboxScreen({super.key});
@@ -52,18 +53,17 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       const LText(
           'Your learning circle. Helpful conversations, in the right place.'),
       const SizedBox(height: 24),
-      Container(
+      FrostedSurface(
+          tint: Theme.of(context).brightness == Brightness.light
+              ? const Color(0xe8eaf8f3)
+              : const Color(0xe8193b36),
           padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.light
-                  ? const Color(0xffeaf8f3)
-                  : const Color(0xff193b36),
-              borderRadius: BorderRadius.circular(22)),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const CircleAvatar(
-                backgroundColor: Color(0xffc8eadf),
-                child: Icon(Icons.verified_user_outlined,
-                    color: Color(0xff0c6c5d))),
+            const AnimatedIconBadge(
+                icon: Icons.verified_user_outlined,
+                color: Color(0xff0c6c5d),
+                background: Color(0xffc8eadf),
+                size: 48),
             const SizedBox(width: 16),
             const Expanded(
                 child: Column(
@@ -130,11 +130,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                    radius: 25,
-                                    backgroundColor:
-                                        accent.withValues(alpha: .12),
-                                    child: Icon(icons[i], color: accent)),
+                                AnimatedIconBadge(
+                                    icon: icons[i], color: accent, size: 50),
                                 const SizedBox(width: 16),
                                 Expanded(
                                     child: Column(
@@ -152,8 +149,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                           Container(
                                               width: 9,
                                               height: 9,
-                                              decoration: const BoxDecoration(
-                                                  color: Color(0xff2563eb),
+                                              decoration: BoxDecoration(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                   shape: BoxShape.circle))
                                       ]),
                                       const SizedBox(height: 5),
@@ -264,10 +263,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
           }),
           title: Row(children: [
             CircleAvatar(
-                backgroundColor: const Color(0xffe5efff),
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: Icon(
                     group ? Icons.groups_outlined : Icons.person_outline,
-                    color: const Color(0xff2563eb))),
+                    color: Theme.of(context).colorScheme.primary)),
             const SizedBox(width: 12),
             Expanded(
                 child: Column(
@@ -452,7 +451,7 @@ class MessageBubble extends StatelessWidget {
                               padding: const EdgeInsets.all(17),
                               decoration: BoxDecoration(
                                   color: sent
-                                      ? const Color(0xff2563eb)
+                                      ? Theme.of(context).colorScheme.primary
                                       : Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.only(
                                       topLeft: const Radius.circular(18),
@@ -474,7 +473,9 @@ class MessageBubble extends StatelessWidget {
                                       Icon(Icons.insert_drive_file_outlined,
                                           color: sent
                                               ? Colors.white
-                                              : const Color(0xff2563eb)),
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .primary),
                                     Text(
                                         message.startsWith('Educator')
                                             ? tr(context, body)

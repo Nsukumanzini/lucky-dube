@@ -13,6 +13,7 @@ import '../shared/components/feature_page.dart';
 import '../shared/components/learner_visuals.dart';
 import 'communication_screens.dart';
 import '../shared/components/language_selector.dart';
+import '../shared/components/premium_surface.dart';
 
 class Portal extends ConsumerStatefulWidget {
   final String page;
@@ -79,25 +80,23 @@ class _PortalState extends ConsumerState<Portal> {
   Future<void> detail(String title, Widget content) =>
       Navigator.of(context).push<void>(MaterialPageRoute(
           builder: (_) => FeaturePage(title: LText(title), content: content)));
-  Widget panel(String title, Widget child, {String? eyebrow}) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (eyebrow != null)
-                LText(
-                  eyebrow,
-                  style: const TextStyle(
-                    color: Color(0xff2563eb),
-                    fontWeight: FontWeight.bold,
-                  ),
+  Widget panel(String title, Widget child, {String? eyebrow}) => FrostedSurface(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (eyebrow != null)
+              LText(
+                eyebrow,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
                 ),
-              LText(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 18),
-              child,
-            ],
-          ),
+              ),
+            LText(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 18),
+            child,
+          ],
         ),
       );
   Widget tile(
@@ -109,9 +108,10 @@ class _PortalState extends ConsumerState<Portal> {
   }) =>
       ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xffeff6ff),
-          child: Icon(icon, color: const Color(0xff2563eb)),
+        leading: AnimatedIconBadge(
+          icon: icon,
+          color: Theme.of(context).colorScheme.primary,
+          size: 44,
         ),
         title: LText(title),
         subtitle: LText(subtitle),
@@ -134,7 +134,7 @@ class _PortalState extends ConsumerState<Portal> {
           children: [
             CircleAvatar(
               radius: phone ? 18 : 20,
-              backgroundColor: const Color(0xff2563eb),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               child: LText(
                 'LD',
                 style: TextStyle(
@@ -209,27 +209,45 @@ class _PortalState extends ConsumerState<Portal> {
                 setState(() {});
                 toast('Your offline workspace is up to date');
               },
-              child: ListView(
-                padding: EdgeInsets.all(wide ? 32 : 16),
-                children: [
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1240),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          content(),
-                          const SizedBox(height: 36),
-                          const LText(
-                            'Optimal Growth Technologies SA',
-                            style: TextStyle(fontSize: 11, color: Colors.grey),
-                          ),
-                        ],
-                      ),
+              child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: Theme.of(context).brightness == Brightness.light
+                          ? const [
+                              Color(0xfff4f7fc),
+                              Color(0xfff8faff),
+                              Color(0xfff1f8f8)
+                            ]
+                          : const [Color(0xff0f172a), Color(0xff111d31)],
                     ),
                   ),
-                ],
-              ),
+                  child: ListView(
+                    padding: EdgeInsets.all(wide ? 32 : 16),
+                    children: [
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1240),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PageReveal(
+                                key: ValueKey(widget.page),
+                                child: content(),
+                              ),
+                              const SizedBox(height: 36),
+                              const LText(
+                                'Optimal Growth Technologies SA',
+                                style:
+                                    TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
             ),
           ),
         ],
@@ -279,10 +297,10 @@ class _PortalState extends ConsumerState<Portal> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 45,
-                    backgroundColor: Color(0xff2563eb),
-                    child: LText(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    child: const LText(
                       'LD',
                       style: TextStyle(color: Colors.white, fontSize: 32),
                     ),
@@ -293,12 +311,79 @@ class _PortalState extends ConsumerState<Portal> {
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: 30),
-                  Icon(
-                    [Icons.menu_book, Icons.forum, Icons.insights][onboarding],
-                    size: 80,
-                    color: const Color(0xff2563eb),
+                  AnimatedSwitcher(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 360),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutBack,
+                      ),
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: Container(
+                      key: ValueKey(onboarding),
+                      width: 128,
+                      height: 128,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            learnerAccents[onboarding].withValues(alpha: .18),
+                            learnerAccents[
+                                    (onboarding + 1) % learnerAccents.length]
+                                .withValues(alpha: .09),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(38),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x192b4d83),
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        [
+                          Icons.menu_book_rounded,
+                          Icons.forum_rounded,
+                          Icons.insights_rounded
+                        ][onboarding],
+                        size: 66,
+                        color: learnerAccents[onboarding],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      3,
+                      (i) => AnimatedContainer(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 220),
+                        width: i == onboarding ? 24 : 8,
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: i == onboarding
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: .2),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   LText(
                     [
                       'Your learning, all together',
@@ -619,46 +704,36 @@ class _PortalState extends ConsumerState<Portal> {
     final accent = learnerAccents[index < 0 ? 0 : index];
     return SizedBox(
         width: width < 550 ? (width - 12) / 2 : (width - 36) / 4,
-        child: Card(
-            child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                              color: accent.withValues(alpha: .12),
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Icon(
-                              [
-                                Icons.auto_stories_outlined,
-                                Icons.check_circle_outline,
-                                Icons.edit_note_rounded,
-                                Icons.insights_rounded
-                              ][index < 0 ? 0 : index],
-                              size: 20,
-                              color: accent)),
-                      const SizedBox(height: 16),
-                      LText(title,
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: accent)),
-                      const SizedBox(height: 8),
-                      LText(value,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 8),
-                      LText(sub,
-                          style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xff64748b),
-                              height: 1.5)),
-                    ]))));
+        child: FrostedSurface(
+            padding: const EdgeInsets.all(18),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              AnimatedIconBadge(
+                  icon: [
+                    Icons.auto_stories_outlined,
+                    Icons.check_circle_outline,
+                    Icons.edit_note_rounded,
+                    Icons.insights_rounded
+                  ][index < 0 ? 0 : index],
+                  size: 40,
+                  color: accent),
+              const SizedBox(height: 16),
+              LText(title,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: accent)),
+              const SizedBox(height: 8),
+              LText(value,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              LText(sub,
+                  style: const TextStyle(
+                      fontSize: 11, color: Color(0xff64748b), height: 1.5)),
+            ])));
   }
 
   Widget search(List<String> filters) => Column(
@@ -965,8 +1040,9 @@ class _PortalState extends ConsumerState<Portal> {
                 final n = weekly ? day.day - day.weekday + i + 1 : i + 1;
                 return TextButton(
                   style: TextButton.styleFrom(
-                    backgroundColor:
-                        n == day.day ? const Color(0xff2563eb) : null,
+                    backgroundColor: n == day.day
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
                     foregroundColor: n == day.day ? Colors.white : null,
                   ),
                   onPressed: () =>

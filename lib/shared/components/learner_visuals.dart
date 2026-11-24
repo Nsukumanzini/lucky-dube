@@ -1,9 +1,11 @@
 import '../../app/localization/app_language.dart';
 // ignore: deprecated_member_use
+import 'dart:ui' as ui;
+// ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 
 const learnerAccents = [
-  Color(0xff2563eb),
+  Color(0xff3156d8),
   Color(0xff0d9488),
   Color(0xffe76a45),
   Color(0xff8055d9)
@@ -25,114 +27,149 @@ class WelcomeBanner extends StatelessWidget {
           opacity: value,
           child: Transform.translate(
               offset: Offset(0, 18 * (1 - value)), child: child)),
-      child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(mobile ? 18 : 28),
-          decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.light
-                  ? const Color(0xffeaf3ff)
-                  : const Color(0xff183454),
-              borderRadius: BorderRadius.circular(mobile ? 24 : 26),
-              border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? const Color(0xffc9dfff)
-                      : Colors.white12),
-              boxShadow: Theme.of(context).brightness == Brightness.light
-                  ? const [
-                      BoxShadow(
-                          color: Color(0x172563eb),
-                          blurRadius: 22,
-                          offset: Offset(0, 8))
-                    ]
-                  : const []),
-          child: LayoutBuilder(builder: (context, size) {
-            final copy =
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const LText('LEARN • CREATE • GROW',
-                  style: TextStyle(
-                      color: Color(0xff2563eb),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2)),
-              const SizedBox(height: 16),
-              LText('Big ideas.\nBrighter possibilities.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineLarge
-                      ?.copyWith(fontWeight: FontWeight.w800, height: 1.15)),
-              const SizedBox(height: 14),
-              const LText(
-                  'A new skill, a creative spark, a step forward.\nMake today your next good chapter.',
-                  style: TextStyle(height: 1.6)),
-              const SizedBox(height: 22),
-              FilledButton.icon(
-                  onPressed: onContinue,
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const LText('Continue learning')),
-            ]);
-            if (size.maxWidth < 600) {
-              final artWidth = size.maxWidth < 300 ? 78.0 : 104.0;
-              return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          const LText('LEARN • CREATE • GROW',
+      child: ClipRRect(
+          borderRadius: BorderRadius.circular(mobile ? 24 : 28),
+          child: BackdropFilter(
+              filter: ui.ImageFilter.blur(
+                sigmaX: reduced ? 0 : 9,
+                sigmaY: reduced ? 0 : 9,
+              ),
+              child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(mobile ? 18 : 28),
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? const [
+                                      Color(0xeaf0f5ff),
+                                      Color(0xdff8fbff),
+                                      Color(0xdff0faf8)
+                                    ]
+                                  : const [
+                                      Color(0xe51b3558),
+                                      Color(0xdf18304d),
+                                      Color(0xdf163e3a)
+                                    ]),
+                      borderRadius: BorderRadius.circular(mobile ? 24 : 28),
+                      border: Border.all(
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? Colors.white
+                                  : Colors.white12,
+                          width: 1.2),
+                      boxShadow:
+                          Theme.of(context).brightness == Brightness.light
+                              ? const [
+                                  BoxShadow(
+                                      color: Color(0x192c4c8e),
+                                      blurRadius: 28,
+                                      offset: Offset(0, 10))
+                                ]
+                              : const []),
+                  child: LayoutBuilder(builder: (context, size) {
+                    final copy = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          LText('LEARN • CREATE • GROW',
                               style: TextStyle(
-                                  color: Color(0xff2563eb),
-                                  fontSize: 9,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.3)),
-                          const SizedBox(height: 10),
+                                  letterSpacing: 2)),
+                          const SizedBox(height: 16),
                           LText('Big ideas.\nBrighter possibilities.',
                               style: Theme.of(context)
                                   .textTheme
-                                  .headlineSmall
+                                  .headlineLarge
                                   ?.copyWith(
-                                      fontSize: size.maxWidth < 300 ? 25 : 28,
                                       fontWeight: FontWeight.w800,
-                                      letterSpacing: -.7,
-                                      height: 1.05)),
-                          const SizedBox(height: 9),
-                          const LText('Make today your next good chapter.',
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 12, height: 1.4)),
-                          const SizedBox(height: 13),
+                                      height: 1.15)),
+                          const SizedBox(height: 14),
+                          const LText(
+                              'A new skill, a creative spark, a step forward.\nMake today your next good chapter.',
+                              style: TextStyle(height: 1.6)),
+                          const SizedBox(height: 22),
                           FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                  minimumSize: const Size(0, 46),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 11),
-                                  visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14))),
                               onPressed: onContinue,
-                              icon: const Icon(Icons.arrow_forward_rounded,
-                                  size: 18),
-                              label: const LText('Continue learning',
-                                  maxLines: 1, overflow: TextOverflow.ellipsis))
-                        ])),
-                    const SizedBox(width: 4),
-                    SizedBox(
-                        width: artWidth,
-                        height: 126,
-                        child: Center(
-                            child: SizedBox(
-                                width: 150,
-                                height: 104,
-                                child: const LearningIllustration())))
-                  ]);
-            }
-            return Row(children: [
-              Expanded(flex: 3, child: copy),
-              const Expanded(
-                  flex: 2,
-                  child: SizedBox(height: 250, child: LearningIllustration()))
-            ]);
-          })),
+                              icon: const Icon(Icons.arrow_forward_rounded),
+                              label: const LText('Continue learning')),
+                        ]);
+                    if (size.maxWidth < 600) {
+                      final artWidth = size.maxWidth < 300 ? 78.0 : 104.0;
+                      return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  LText('LEARN • CREATE • GROW',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.3)),
+                                  const SizedBox(height: 10),
+                                  LText('Big ideas.\nBrighter possibilities.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                              fontSize:
+                                                  size.maxWidth < 300 ? 25 : 28,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -.7,
+                                              height: 1.05)),
+                                  const SizedBox(height: 9),
+                                  const LText(
+                                      'Make today your next good chapter.',
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          TextStyle(fontSize: 12, height: 1.4)),
+                                  const SizedBox(height: 13),
+                                  FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                          minimumSize: const Size(0, 46),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 11),
+                                          visualDensity: VisualDensity.compact,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14))),
+                                      onPressed: onContinue,
+                                      icon: const Icon(
+                                          Icons.arrow_forward_rounded,
+                                          size: 18),
+                                      label: const LText('Continue learning',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis))
+                                ])),
+                            const SizedBox(width: 4),
+                            SizedBox(
+                                width: artWidth,
+                                height: 126,
+                                child: Center(
+                                    child: SizedBox(
+                                        width: 150,
+                                        height: 104,
+                                        child: const LearningIllustration())))
+                          ]);
+                    }
+                    return Row(children: [
+                      Expanded(flex: 3, child: copy),
+                      const Expanded(
+                          flex: 2,
+                          child: SizedBox(
+                              height: 250, child: LearningIllustration()))
+                    ]);
+                  })))),
     );
   }
 }

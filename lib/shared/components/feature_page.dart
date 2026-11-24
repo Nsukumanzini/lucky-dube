@@ -3,6 +3,7 @@ import '../../app/localization/app_language.dart';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'premium_surface.dart';
 
 /// A full route with responsive reading width and keyboard-safe action area.
 class FeaturePage extends StatelessWidget {
@@ -18,6 +19,7 @@ class FeaturePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
+            toolbarHeight: MediaQuery.sizeOf(context).width < 600 ? 60 : 68,
             title: title,
             leading: BackButton(onPressed: () {
               if (Navigator.of(context).canPop()) {
@@ -26,21 +28,37 @@ class FeaturePage extends StatelessWidget {
                 context.go('/home');
               }
             })),
-        body: SafeArea(
-            child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                        maxWidth: MediaQuery.sizeOf(context).width >= 1200
-                            ? 1200
-                            : 960),
-                    child: Padding(
-                        padding: EdgeInsets.all(_pageGutter(context)),
-                        child: scrollable
-                            ? SingleChildScrollView(
-                                child: SizedBox(
-                                    width: double.infinity, child: content))
-                            : content)))),
+        body: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: Theme.of(context).brightness == Brightness.light
+                    ? const [
+                        Color(0xfff4f7fc),
+                        Color(0xfff8faff),
+                        Color(0xfff1f8f8)
+                      ]
+                    : const [Color(0xff0f172a), Color(0xff111d31)],
+              ),
+            ),
+            child: SafeArea(
+                child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.sizeOf(context).width >= 1200
+                                ? 1200
+                                : 960),
+                        child: PageReveal(
+                            child: Padding(
+                                padding: EdgeInsets.all(_pageGutter(context)),
+                                child: scrollable
+                                    ? SingleChildScrollView(
+                                        child: SizedBox(
+                                            width: double.infinity,
+                                            child: content))
+                                    : content)))))),
         bottomNavigationBar: actions.isEmpty
             ? null
             : SafeArea(
@@ -49,10 +67,15 @@ class FeaturePage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: .96),
                         border: Border(
                             top: BorderSide(
-                                color: Theme.of(context).dividerColor))),
+                                color: Theme.of(context)
+                                    .dividerColor
+                                    .withValues(alpha: .55)))),
                     child: Wrap(
                         alignment: WrapAlignment.end,
                         spacing: 12,

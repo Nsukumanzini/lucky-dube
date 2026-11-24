@@ -35,17 +35,23 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
     routes: [
       GoRoute(
           path: '/subject/:name',
-          builder: (c, s) => SubjectScreen(subject: s.pathParameters['name']!)),
+          pageBuilder: (c, s) => _screenPage(
+              s, SubjectScreen(subject: s.pathParameters['name']!))),
       GoRoute(
           path: '/learning/:id',
-          builder: (c, s) => LearningRoute(id: s.pathParameters['id']!)),
+          pageBuilder: (c, s) =>
+              _screenPage(s, LearningRoute(id: s.pathParameters['id']!))),
       GoRoute(
           path: '/conversation/:channel',
-          builder: (c, s) =>
-              ConversationRoute(channel: s.pathParameters['channel']!)),
+          pageBuilder: (c, s) => _screenPage(
+              s, ConversationRoute(channel: s.pathParameters['channel']!))),
       GoRoute(
         path: '/:page',
-        builder: (c, s) => Portal(page: s.pathParameters['page']!),
+        pageBuilder: (c, s) => _screenPage(
+            s,
+            Portal(
+                key: ValueKey(s.pathParameters['page']),
+                page: s.pathParameters['page']!)),
       ),
     ],
   );
@@ -81,36 +87,66 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
     );
   }
 
+  CustomTransitionPage<void> _screenPage(GoRouterState state, Widget child) =>
+      CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: child,
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 260),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final reduce = MediaQuery.disableAnimationsOf(context);
+          if (reduce) return child;
+          final eased = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: eased,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(.035, 0),
+                end: Offset.zero,
+              ).animate(eased),
+              child: child,
+            ),
+          );
+        },
+      );
+
   ThemeData theme(Brightness b) => ThemeData(
         useMaterial3: true,
         brightness: b,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff2563eb),
+          seedColor: const Color(0xff3156d8),
           brightness: b,
         ).copyWith(
-            primary: const Color(0xff2563eb),
+            primary: const Color(0xff3156d8),
+            secondary: const Color(0xff0d9488),
+            tertiary: const Color(0xffe78353),
             onPrimary: Colors.white,
-            surface:
-                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            surface: b == Brightness.light
+                ? const Color(0xfffdfdff)
+                : const Color(0xff18253a),
             onSurface: b == Brightness.light
                 ? const Color(0xff22334b)
                 : const Color(0xffedf4ff),
             primaryContainer: b == Brightness.light
-                ? const Color(0xffeaf3ff)
+                ? const Color(0xffe9efff)
                 : const Color(0xff214675)),
         scaffoldBackgroundColor: b == Brightness.light
-            ? const Color(0xfff7faff)
+            ? const Color(0xfff4f7fc)
             : const Color(0xff0f172a),
         cardTheme: CardThemeData(
-          elevation: b == Brightness.light ? 1 : 0,
+          elevation: 0,
           color: b == Brightness.light ? Colors.white : const Color(0xff18253a),
-          shadowColor: const Color(0x120f172a),
+          shadowColor: const Color(0x14203865),
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             side: BorderSide(
               color: b == Brightness.light
-                  ? const Color(0xffe2e8f0)
+                  ? const Color(0xffe5eaf3)
                   : Colors.white12,
             ),
           ),
@@ -118,11 +154,40 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: b == Brightness.light
-              ? const Color(0xfff0f5fb)
+              ? const Color(0xfff2f5fa)
               : const Color(0xff22334b),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+                color: b == Brightness.light
+                    ? const Color(0xffe4eaf3)
+                    : Colors.white10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xff3156d8), width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         appBarTheme: AppBarTheme(
@@ -134,13 +199,17 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         navigationRailTheme: NavigationRailThemeData(
             backgroundColor:
                 b == Brightness.light ? Colors.white : const Color(0xff18253a),
-            indicatorColor: const Color(0xffdcecff)),
+            indicatorColor: b == Brightness.light
+                ? const Color(0xffe1eaff)
+                : const Color(0xff214675)),
         navigationBarTheme: NavigationBarThemeData(
             backgroundColor:
                 b == Brightness.light ? Colors.white : const Color(0xff18253a),
             elevation: 2,
             surfaceTintColor: Colors.transparent,
-            indicatorColor: const Color(0xffdcecff),
+            indicatorColor: b == Brightness.light
+                ? const Color(0xffe1eaff)
+                : const Color(0xff214675),
             indicatorShape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
