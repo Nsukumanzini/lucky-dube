@@ -9,6 +9,7 @@ import 'localization/app_language.dart';
 import '../main.dart';
 import '../features/screens.dart';
 import '../features/learning_screens.dart';
+import '../shared/components/premium_surface.dart';
 
 class LuckyApp extends ConsumerStatefulWidget {
   const LuckyApp({super.key});
@@ -76,13 +77,25 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
       themeMode: ThemeMode.values[(repo.state['theme'] as int?) ?? 1],
       theme: theme(Brightness.light),
       darkTheme: theme(Brightness.dark),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(
-            (repo.state['textScale'] as num?)?.toDouble() ?? 1,
-          ),
+      builder: (context, child) => BackdropGroup(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: LiquidGlassBackdrop(
+                dark: Theme.of(context).brightness == Brightness.dark,
+              ),
+            ),
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(
+                  (repo.state['textScale'] as num?)?.toDouble() ?? 1,
+                ),
+              ),
+              child: child!,
+            ),
+          ],
         ),
-        child: child!,
       ),
     );
   }
@@ -134,13 +147,13 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             primaryContainer: b == Brightness.light
                 ? const Color(0xffe9efff)
                 : const Color(0xff214675)),
-        scaffoldBackgroundColor: b == Brightness.light
-            ? const Color(0xfff4f7fc)
-            : const Color(0xff0f172a),
+        scaffoldBackgroundColor: Colors.transparent,
         cardTheme: CardThemeData(
           elevation: 0,
-          color: b == Brightness.light ? Colors.white : const Color(0xff18253a),
-          shadowColor: const Color(0x14203865),
+          color: b == Brightness.light
+              ? const Color(0xcfffffff)
+              : const Color(0xc91a2740),
+          shadowColor: const Color(0x24314b79),
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
@@ -154,8 +167,8 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: b == Brightness.light
-              ? const Color(0xfff2f5fa)
-              : const Color(0xff22334b),
+              ? const Color(0xc5f9fbff)
+              : const Color(0xb923344c),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
@@ -164,8 +177,8 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(
                 color: b == Brightness.light
-                    ? const Color(0xffe4eaf3)
-                    : Colors.white10),
+                    ? const Color(0xbfffffff)
+                    : Colors.white24),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -190,21 +203,78 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
+        chipTheme: ChipThemeData(
+          backgroundColor: b == Brightness.light
+              ? const Color(0xc8ffffff)
+              : const Color(0xb923344c),
+          selectedColor: b == Brightness.light
+              ? const Color(0xc9e3ebff)
+              : const Color(0xc9214675),
+          side: BorderSide(
+            color: b == Brightness.light
+                ? Colors.white.withValues(alpha: .9)
+                : Colors.white.withValues(alpha: .12),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          labelStyle: TextStyle(
+            color: b == Brightness.light
+                ? const Color(0xff20304a)
+                : const Color(0xffedf4ff),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: b == Brightness.light
+              ? const Color(0xe8ffffff)
+              : const Color(0xe51a2740),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+            side: BorderSide(
+              color: b == Brightness.light ? Colors.white : Colors.white24,
+            ),
+          ),
+        ),
+        popupMenuTheme: PopupMenuThemeData(
+          color: b == Brightness.light
+              ? const Color(0xe8ffffff)
+              : const Color(0xe51a2740),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: b == Brightness.light
+              ? const Color(0xe8293f62)
+              : const Color(0xe8e7efff),
+          contentTextStyle: TextStyle(
+            color:
+                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
         appBarTheme: AppBarTheme(
             centerTitle: false,
             elevation: 0,
             scrolledUnderElevation: 0,
-            backgroundColor:
-                b == Brightness.light ? Colors.white : const Color(0xff18253a)),
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: b == Brightness.light
+                ? const Color(0xff20304a)
+                : const Color(0xffedf4ff)),
         navigationRailTheme: NavigationRailThemeData(
-            backgroundColor:
-                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            backgroundColor: Colors.transparent,
             indicatorColor: b == Brightness.light
                 ? const Color(0xffe1eaff)
                 : const Color(0xff214675)),
         navigationBarTheme: NavigationBarThemeData(
-            backgroundColor:
-                b == Brightness.light ? Colors.white : const Color(0xff18253a),
+            backgroundColor: Colors.transparent,
             elevation: 2,
             surfaceTintColor: Colors.transparent,
             indicatorColor: b == Brightness.light

@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../data/repository.dart';
 import '../main.dart';
 import '../shared/components/feature_page.dart';
+import '../shared/components/premium_surface.dart';
 import 'communication_screens.dart';
 
 class AssignmentScreen extends StatefulWidget {
@@ -402,12 +403,10 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                     .bodyLarge
                     ?.copyWith(height: 1.8)),
             const SizedBox(height: 28),
-            Card(
-                child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: LText(e.kind == 'Lesson'
-                        ? 'Reflect: explain one idea you learned and one question you would like to ask in class.'
-                        : 'Text guide • Available on this device\nAll content on this screen is available without an external document or video service.'))),
+            LiquidGlassSurface(
+                child: LText(e.kind == 'Lesson'
+                    ? 'Reflect: explain one idea you learned and one question you would like to ask in class.'
+                    : 'Text guide • Available on this device\nAll content on this screen is available without an external document or video service.')),
             if (downloading)
               const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -528,7 +527,8 @@ class SubjectScreen extends ConsumerWidget {
                       'Term 4 • Consolidation and creative application\nExplore your lessons, prepare assignments and practise before the final assessments.'),
                   const SizedBox(height: 24),
                   for (final kind in kinds)
-                    Card(
+                    LiquidGlassSurface(
+                        padding: EdgeInsets.zero,
                         child: ListTile(
                             leading: const Icon(Icons.arrow_forward),
                             title: LText({
@@ -548,7 +548,8 @@ class SubjectScreen extends ConsumerWidget {
                     for (final item in repo
                         .content(kind)
                         .where((e) => e.subject == subject))
-                      Card(
+                      LiquidGlassSurface(
+                          padding: EdgeInsets.zero,
                           child: ListTile(
                               contentPadding: const EdgeInsets.all(20),
                               title: LText(item.title),

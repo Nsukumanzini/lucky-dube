@@ -116,82 +116,87 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           final accent = learnerAccents[i];
           return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Card(
-                  margin: EdgeInsets.zero,
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                      onTap: () {
-                        repo.put('read-$channel', true);
-                        context.push(
-                            '/conversation/${Uri.encodeComponent(channel)}');
-                      },
-                      child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AnimatedIconBadge(
-                                    icon: icons[i], color: accent, size: 50),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                      Row(children: [
-                                        Expanded(
-                                            child: LText(
-                                                channel.split(' • ').first,
-                                                style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 16))),
-                                        if (unread)
-                                          Container(
-                                              width: 9,
-                                              height: 9,
-                                              decoration: BoxDecoration(
+              child: LiquidGlassSurface(
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(22),
+                  child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                          onTap: () {
+                            repo.put('read-$channel', true);
+                            context.push(
+                                '/conversation/${Uri.encodeComponent(channel)}');
+                          },
+                          child: Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    AnimatedIconBadge(
+                                        icon: icons[i],
+                                        color: accent,
+                                        size: 50),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                          Row(children: [
+                                            Expanded(
+                                                child: LText(
+                                                    channel.split(' • ').first,
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        fontSize: 16))),
+                                            if (unread)
+                                              Container(
+                                                  width: 9,
+                                                  height: 9,
+                                                  decoration: BoxDecoration(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      shape: BoxShape.circle))
+                                          ]),
+                                          const SizedBox(height: 5),
+                                          LText(
+                                              i == 0
+                                                  ? 'CLASS TEACHER'
+                                                  : 'MODERATED GROUP',
+                                              style: TextStyle(
+                                                  color: accent,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: 1)),
+                                          const SizedBox(height: 9),
+                                          Text(
+                                              messages.isEmpty ||
+                                                      messages.last.startsWith(
+                                                          'Educator')
+                                                  ? tr(context, preview)
+                                                  : preview,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
                                                   color: Theme.of(context)
                                                       .colorScheme
-                                                      .primary,
-                                                  shape: BoxShape.circle))
-                                      ]),
-                                      const SizedBox(height: 5),
-                                      LText(
-                                          i == 0
-                                              ? 'CLASS TEACHER'
-                                              : 'MODERATED GROUP',
-                                          style: TextStyle(
-                                              color: accent,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              letterSpacing: 1)),
-                                      const SizedBox(height: 9),
-                                      Text(
-                                          messages.isEmpty ||
-                                                  messages.last
-                                                      .startsWith('Educator')
-                                              ? tr(context, preview)
-                                              : preview,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                              height: 1.5)),
-                                      const SizedBox(height: 8),
-                                      LText(
-                                          messages.isEmpty
-                                              ? 'Start a conversation'
-                                              : 'Latest activity',
-                                          style: const TextStyle(
-                                              fontSize: 11,
-                                              color: Color(0xff64748b))),
-                                    ])),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.chevron_right_rounded,
-                                    color: Color(0xff94a3b8))
-                              ])))));
+                                                      .onSurfaceVariant,
+                                                  height: 1.5)),
+                                          const SizedBox(height: 8),
+                                          LText(
+                                              messages.isEmpty
+                                                  ? 'Start a conversation'
+                                                  : 'Latest activity',
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xff64748b))),
+                                        ])),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.chevron_right_rounded,
+                                        color: Color(0xff94a3b8))
+                                  ]))))));
         })
     ]);
   }
@@ -253,6 +258,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
         widget.repo.value('chat-${widget.channel}', <String>[]));
     return Scaffold(
       appBar: AppBar(
+          flexibleSpace: const LiquidGlassBar(),
           leading: BackButton(onPressed: () {
             widget.repo.put('read-${widget.channel}', true);
             if (Navigator.canPop(context)) {
@@ -314,13 +320,15 @@ class _ConversationScreenState extends State<ConversationScreen> {
               child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 980),
                   child: Column(children: [
-                    Container(
+                    LiquidGlassSurface(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? const Color(0xffedf7f3)
-                            : const Color(0xff193b36),
+                        borderRadius: BorderRadius.zero,
+                        blur: 14,
+                        tint: Theme.of(context).brightness == Brightness.light
+                            ? const Color(0xb5eaf8f3)
+                            : const Color(0xbc153c38),
                         child: Row(children: [
                           const Icon(Icons.shield_outlined,
                               size: 17, color: Color(0xff0d9488)),
@@ -352,15 +360,15 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 key: ValueKey('$i-${messages[i]}'),
                                 message: messages[i]),
                         ])),
-                    Container(
+                    LiquidGlassSurface(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            border: Border(
-                                top: BorderSide(
-                                    color: Theme.of(context)
-                                        .dividerColor
-                                        .withValues(alpha: .15)))),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(22)),
+                        blur: 20,
+                        tint: Theme.of(context).brightness == Brightness.light
+                            ? const Color(0xcaffffff)
+                            : const Color(0xce16233a),
                         child: Column(children: [
                           Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -447,25 +455,20 @@ class MessageBubble extends StatelessWidget {
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                       color: Color(0xff64748b)))),
-                          Container(
+                          LiquidGlassSurface(
                               padding: const EdgeInsets.all(17),
-                              decoration: BoxDecoration(
-                                  color: sent
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(18),
-                                      topRight: const Radius.circular(18),
-                                      bottomLeft:
-                                          Radius.circular(sent ? 18 : 4),
-                                      bottomRight:
-                                          Radius.circular(sent ? 4 : 18)),
-                                  border: sent
-                                      ? null
-                                      : Border.all(
-                                          color: Theme.of(context)
-                                              .dividerColor
-                                              .withValues(alpha: .15))),
+                              borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft: Radius.circular(sent ? 20 : 5),
+                                  bottomRight: Radius.circular(sent ? 5 : 20)),
+                              blur: 16,
+                              tint: sent
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: .82)
+                                  : null,
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

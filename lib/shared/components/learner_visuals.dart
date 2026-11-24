@@ -29,7 +29,7 @@ class WelcomeBanner extends StatelessWidget {
               offset: Offset(0, 18 * (1 - value)), child: child)),
       child: ClipRRect(
           borderRadius: BorderRadius.circular(mobile ? 24 : 28),
-          child: BackdropFilter(
+          child: BackdropFilter.grouped(
               filter: ui.ImageFilter.blur(
                 sigmaX: reduced ? 0 : 9,
                 sigmaY: reduced ? 0 : 9,

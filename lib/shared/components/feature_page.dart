@@ -20,6 +20,7 @@ class FeaturePage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
             toolbarHeight: MediaQuery.sizeOf(context).width < 600 ? 60 : 68,
+            flexibleSpace: const LiquidGlassBar(),
             title: title,
             leading: BackButton(onPressed: () {
               if (Navigator.of(context).canPop()) {
@@ -35,11 +36,11 @@ class FeaturePage extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: Theme.of(context).brightness == Brightness.light
                     ? const [
-                        Color(0xfff4f7fc),
-                        Color(0xfff8faff),
-                        Color(0xfff1f8f8)
+                        Color(0x30ffffff),
+                        Color(0x19e6efff),
+                        Color(0x1bdbf5ee)
                       ]
-                    : const [Color(0xff0f172a), Color(0xff111d31)],
+                    : const [Color(0x22111d31), Color(0x18254156)],
               ),
             ),
             child: SafeArea(
@@ -63,24 +64,17 @@ class FeaturePage extends StatelessWidget {
             ? null
             : SafeArea(
                 top: false,
-                child: Container(
+                child: LiquidGlassSurface(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: .96),
-                        border: Border(
-                            top: BorderSide(
-                                color: Theme.of(context)
-                                    .dividerColor
-                                    .withValues(alpha: .55)))),
+                    borderRadius: BorderRadius.zero,
+                    blur: 20,
                     child: Wrap(
                         alignment: WrapAlignment.end,
                         spacing: 12,
                         runSpacing: 8,
-                        children: actions))),
+                        children: actions)),
+              ),
       );
 
   double _pageGutter(BuildContext context) {

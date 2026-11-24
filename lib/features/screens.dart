@@ -55,21 +55,29 @@ class _PortalState extends ConsumerState<Portal> {
   Future<bool> confirm(String title) async =>
       await showDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
-          title: LText(title),
-          content: const LText(
-            'This changes only the information saved on this device.',
+        builder: (c) => LiquidGlassSurface(
+          padding: EdgeInsets.zero,
+          borderRadius: BorderRadius.circular(28),
+          blur: 24,
+          child: AlertDialog(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            title: LText(title),
+            content: const LText(
+              'This changes only the information saved on this device.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const LText('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const LText('Confirm'),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c, false),
-              child: const LText('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: const LText('Confirm'),
-            ),
-          ],
         ),
       ) ??
       false;
@@ -130,6 +138,7 @@ class _PortalState extends ConsumerState<Portal> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: phone ? 60 : null,
+        flexibleSpace: const LiquidGlassBar(),
         title: Row(
           children: [
             CircleAvatar(
@@ -174,31 +183,45 @@ class _PortalState extends ConsumerState<Portal> {
       body: Row(
         children: [
           if (wide)
-            NavigationRail(
-              extended: MediaQuery.sizeOf(context).width > 1150,
-              selectedIndex: selected < 0 ? null : selected,
-              onDestinationSelected: (i) => go(nav[i]),
-              leading: const Padding(
-                padding: EdgeInsets.all(16),
-                child: LText(
-                  'YOUR WORKSPACE',
-                  style: TextStyle(fontSize: 10, letterSpacing: 2),
-                ),
-              ),
-              destinations: List.generate(
-                5,
-                (i) => NavigationRailDestination(
-                  icon: Icon(
-                    [
-                      Icons.dashboard_outlined,
-                      Icons.auto_stories_outlined,
-                      Icons.calendar_month_outlined,
-                      Icons.forum_outlined,
-                      Icons.person_outline,
-                    ][i],
+            LiquidGlassSurface(
+              padding: EdgeInsets.zero,
+              borderRadius: BorderRadius.zero,
+              blur: 18,
+              tint: Theme.of(context).brightness == Brightness.light
+                  ? const Color(0xbfffffff)
+                  : const Color(0xc9111d31),
+              child: NavigationRail(
+                extended: MediaQuery.sizeOf(context).width > 1150,
+                selectedIndex: selected < 0 ? null : selected,
+                onDestinationSelected: (i) => go(nav[i]),
+                leading: const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: LText(
+                    'YOUR WORKSPACE',
+                    style: TextStyle(fontSize: 10, letterSpacing: 2),
                   ),
-                  label: LText(
-                    ['Home', 'Subjects', 'Calendar', 'Messages', 'Profile'][i],
+                ),
+                destinations: List.generate(
+                  5,
+                  (i) => NavigationRailDestination(
+                    icon: Icon(
+                      [
+                        Icons.dashboard_outlined,
+                        Icons.auto_stories_outlined,
+                        Icons.calendar_month_outlined,
+                        Icons.forum_outlined,
+                        Icons.person_outline,
+                      ][i],
+                    ),
+                    label: LText(
+                      [
+                        'Home',
+                        'Subjects',
+                        'Calendar',
+                        'Messages',
+                        'Profile'
+                      ][i],
+                    ),
                   ),
                 ),
               ),
@@ -216,11 +239,11 @@ class _PortalState extends ConsumerState<Portal> {
                       end: Alignment.bottomRight,
                       colors: Theme.of(context).brightness == Brightness.light
                           ? const [
-                              Color(0xfff4f7fc),
-                              Color(0xfff8faff),
-                              Color(0xfff1f8f8)
+                              Color(0x30ffffff),
+                              Color(0x19e6efff),
+                              Color(0x1bdbf5ee)
                             ]
-                          : const [Color(0xff0f172a), Color(0xff111d31)],
+                          : const [Color(0x22111d31), Color(0x18254156)],
                     ),
                   ),
                   child: ListView(
@@ -254,31 +277,39 @@ class _PortalState extends ConsumerState<Portal> {
       ),
       bottomNavigationBar: wide
           ? null
-          : NavigationBar(
-              height: 76,
-              selectedIndex: selected < 0 ? 0 : selected,
-              onDestinationSelected: (i) => go(nav[i]),
-              destinations: List.generate(
-                5,
-                (i) => NavigationDestination(
-                  icon: Icon(
-                    [
-                      Icons.home_outlined,
-                      Icons.menu_book,
-                      Icons.calendar_month,
-                      Icons.chat_bubble_outline,
-                      Icons.person_outline,
-                    ][i],
-                  ),
-                  label: tr(
-                      context,
+          : LiquidGlassSurface(
+              padding: EdgeInsets.zero,
+              borderRadius: BorderRadius.zero,
+              blur: 22,
+              tint: Theme.of(context).brightness == Brightness.light
+                  ? const Color(0xc5ffffff)
+                  : const Color(0xcf14213a),
+              child: NavigationBar(
+                height: 76,
+                selectedIndex: selected < 0 ? 0 : selected,
+                onDestinationSelected: (i) => go(nav[i]),
+                destinations: List.generate(
+                  5,
+                  (i) => NavigationDestination(
+                    icon: Icon(
                       [
-                        'Home',
-                        'Subjects',
-                        'Calendar',
-                        'Messages',
-                        'Profile',
-                      ][i]),
+                        Icons.home_outlined,
+                        Icons.menu_book,
+                        Icons.calendar_month,
+                        Icons.chat_bubble_outline,
+                        Icons.person_outline,
+                      ][i],
+                    ),
+                    label: tr(
+                        context,
+                        [
+                          'Home',
+                          'Subjects',
+                          'Calendar',
+                          'Messages',
+                          'Profile',
+                        ][i]),
+                  ),
                 ),
               ),
             ),
@@ -286,7 +317,10 @@ class _PortalState extends ConsumerState<Portal> {
   }
 
   Widget intro() => Scaffold(
-        appBar: AppBar(actions: const [LanguageSelector()]),
+        appBar: AppBar(
+          flexibleSpace: const LiquidGlassBar(),
+          actions: const [LanguageSelector()],
+        ),
         body: Center(
             child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -426,7 +460,10 @@ class _PortalState extends ConsumerState<Portal> {
         )),
       );
   Widget login() => Scaffold(
-        appBar: AppBar(actions: const [LanguageSelector()]),
+        appBar: AppBar(
+          flexibleSpace: const LiquidGlassBar(),
+          actions: const [LanguageSelector()],
+        ),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -840,7 +877,8 @@ class _PortalState extends ConsumerState<Portal> {
           return true;
         }).map((s) {
           if (subjectMode) {
-            return Card(
+            return LiquidGlassSurface(
+              padding: EdgeInsets.zero,
               child: tile(
                 s,
                 '${MockRepository.teachers[r.subjects(r.learner.grade).indexOf(s) % 12]} • ${r.completed} lessons complete\n1 pending task • Latest result 76% • Next lesson 10:15',
@@ -850,7 +888,8 @@ class _PortalState extends ConsumerState<Portal> {
             );
           }
           final e = r.content(kind).firstWhere((e) => e.title == s);
-          return Card(
+          return LiquidGlassSurface(
+            padding: EdgeInsets.zero,
             child: tile(
               e.title,
               '${e.subject} • Term ${e.term}${kind == 'Assignment' ? ' • Due 27 Nov, 16:00 • ${(r.value(e.id, {}) as Map)['submitted'] == true ? 'Submitted' : 'Upcoming'}' : ''}',
@@ -1122,7 +1161,8 @@ class _PortalState extends ConsumerState<Portal> {
             'School closing arrangements',
             'Important learner safety notice',
           ].where((e) => e.toLowerCase().contains(query)))
-            Card(
+            LiquidGlassSurface(
+              padding: EdgeInsets.zero,
               child: tile(
                 e,
                 '${MockRepository.teachers[0]} • 25 Nov 2026 • ${r.value('read-$e', false) == true ? 'Read' : 'Unread'}',
@@ -1262,7 +1302,8 @@ class _PortalState extends ConsumerState<Portal> {
           child: const LText('Mark all as read'),
         ),
         for (final n in list.where((n) => r.value('dismiss-$n', false) != true))
-          Card(
+          LiquidGlassSurface(
+            padding: EdgeInsets.zero,
             child: tile(
               n,
               r.value('notificationsRead', false) == true ? 'Read' : 'Unread',
