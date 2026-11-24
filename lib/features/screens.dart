@@ -2,6 +2,7 @@ import '../app/localization/app_language.dart';
 // Retain compatibility with Flutter versions before the Material package split.
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -31,6 +32,9 @@ class _PortalState extends ConsumerState<Portal> {
   String? error;
   MockRepository get r => ref.read(repositoryProvider);
   void go(String page) {
+    if (MediaQuery.sizeOf(context).width < 768) {
+      HapticFeedback.selectionClick();
+    }
     setState(() {
       query = '';
       filter = 'All';
@@ -120,28 +124,33 @@ class _PortalState extends ConsumerState<Portal> {
     if (r.state['onboarded'] != true) return intro();
     if (r.state['session'] == null) return login();
     final wide = MediaQuery.sizeOf(context).width >= 768;
+    final phone = MediaQuery.sizeOf(context).width < 600;
     final nav = ['home', 'subjects', 'calendar', 'messages', 'profile'];
     final selected = nav.indexOf(widget.page);
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: phone ? 60 : null,
         title: Row(
           children: [
-            const CircleAvatar(
-              backgroundColor: Color(0xff2563eb),
+            CircleAvatar(
+              radius: phone ? 18 : 20,
+              backgroundColor: const Color(0xff2563eb),
               child: LText(
                 'LD',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: phone ? 13 : 14,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: phone ? 8 : 12),
             Expanded(
                 child: LText(
               MockRepository.school.displayName,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: phone ? 16 : 19),
             )),
             if (MediaQuery.sizeOf(context).width > 1000) ...[
               const SizedBox(width: 20),
@@ -150,7 +159,7 @@ class _PortalState extends ConsumerState<Portal> {
           ],
         ),
         actions: [
-          const LanguageSelector(),
+          LanguageSelector(compact: phone),
           IconButton(
             tooltip: tr(context, 'Notifications'),
             onPressed: () => go('notifications'),
@@ -159,7 +168,7 @@ class _PortalState extends ConsumerState<Portal> {
               child: const Icon(Icons.notifications_outlined),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: phone ? 4 : 12),
         ],
       ),
       body: Row(
@@ -228,6 +237,7 @@ class _PortalState extends ConsumerState<Portal> {
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
+              height: 76,
               selectedIndex: selected < 0 ? 0 : selected,
               onDestinationSelected: (i) => go(nav[i]),
               destinations: List.generate(

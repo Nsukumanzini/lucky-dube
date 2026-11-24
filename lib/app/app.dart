@@ -102,10 +102,12 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             ? const Color(0xfff7faff)
             : const Color(0xff0f172a),
         cardTheme: CardThemeData(
-          elevation: 0,
+          elevation: b == Brightness.light ? 1 : 0,
           color: b == Brightness.light ? Colors.white : const Color(0xff18253a),
+          shadowColor: const Color(0x120f172a),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             side: BorderSide(
               color: b == Brightness.light
                   ? const Color(0xffe2e8f0)
@@ -136,6 +138,17 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         navigationBarTheme: NavigationBarThemeData(
             backgroundColor:
                 b == Brightness.light ? Colors.white : const Color(0xff18253a),
-            indicatorColor: const Color(0xffdcecff)),
+            elevation: 2,
+            surfaceTintColor: Colors.transparent,
+            indicatorColor: const Color(0xffdcecff),
+            indicatorShape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+                TextStyle(
+                    fontSize: 11,
+                    fontWeight: states.contains(WidgetState.selected)
+                        ? FontWeight.w700
+                        : FontWeight.w500))),
       );
 }

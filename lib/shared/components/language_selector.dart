@@ -5,7 +5,8 @@ import '../../main.dart';
 import '../../app/localization/app_language.dart';
 
 class LanguageSelector extends ConsumerWidget {
-  const LanguageSelector({super.key});
+  final bool compact;
+  const LanguageSelector({super.key, this.compact = false});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(repositoryProvider);
@@ -22,12 +23,14 @@ class LanguageSelector extends ConsumerWidget {
                 ])))
             .toList(),
         child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.translate, size: 19),
-              const SizedBox(width: 6),
-              LText(repo.language == 'zu' ? 'isiZulu' : 'English',
-                  style: const TextStyle(fontSize: 12))
-            ])));
+            padding: EdgeInsets.all(compact ? 14 : 12),
+            child: compact
+                ? const Icon(Icons.translate, size: 20)
+                : Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.translate, size: 19),
+                    const SizedBox(width: 6),
+                    LText(repo.language == 'zu' ? 'isiZulu' : 'English',
+                        style: const TextStyle(fontSize: 12))
+                  ])));
   }
 }

@@ -11,7 +11,7 @@ import 'package:lucky_dube_learner/app/app.dart';
 import 'package:lucky_dube_learner/data/repository.dart';
 
 void main() {
-  for (final width in [360.0, 390.0, 768.0, 1024.0, 1440.0]) {
+  for (final width in [320.0, 360.0, 390.0, 768.0, 1024.0, 1440.0]) {
     testWidgets('dashboard and navigation at $width', (tester) async {
       tester.view.physicalSize = Size(width, 1000);
       tester.view.devicePixelRatio = 1;

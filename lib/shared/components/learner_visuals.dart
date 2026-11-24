@@ -16,6 +16,7 @@ class WelcomeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reduced = MediaQuery.disableAnimationsOf(context);
+    final mobile = MediaQuery.sizeOf(context).width < 600;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: reduced ? 1 : 0, end: 1),
       duration: reduced ? Duration.zero : const Duration(milliseconds: 800),
@@ -26,13 +27,24 @@ class WelcomeBanner extends StatelessWidget {
               offset: Offset(0, 18 * (1 - value)), child: child)),
       child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(28),
+          padding: EdgeInsets.all(mobile ? 18 : 28),
           decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.light
                   ? const Color(0xffeaf3ff)
                   : const Color(0xff183454),
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: const Color(0xffc9dfff))),
+              borderRadius: BorderRadius.circular(mobile ? 24 : 26),
+              border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0xffc9dfff)
+                      : Colors.white12),
+              boxShadow: Theme.of(context).brightness == Brightness.light
+                  ? const [
+                      BoxShadow(
+                          color: Color(0x172563eb),
+                          blurRadius: 22,
+                          offset: Offset(0, 8))
+                    ]
+                  : const []),
           child: LayoutBuilder(builder: (context, size) {
             final copy =
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -59,14 +71,59 @@ class WelcomeBanner extends StatelessWidget {
                   label: const LText('Continue learning')),
             ]);
             if (size.maxWidth < 600) {
-              return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              final artWidth = size.maxWidth < 300 ? 78.0 : 104.0;
+              return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    copy,
-                    const SizedBox(height: 12),
-                    const SizedBox(
-                        height: 150,
-                        child: Center(child: LearningIllustration()))
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          const LText('LEARN • CREATE • GROW',
+                              style: TextStyle(
+                                  color: Color(0xff2563eb),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.3)),
+                          const SizedBox(height: 10),
+                          LText('Big ideas.\nBrighter possibilities.',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                      fontSize: size.maxWidth < 300 ? 25 : 28,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -.7,
+                                      height: 1.05)),
+                          const SizedBox(height: 9),
+                          const LText('Make today your next good chapter.',
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 12, height: 1.4)),
+                          const SizedBox(height: 13),
+                          FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                  minimumSize: const Size(0, 46),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 11),
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14))),
+                              onPressed: onContinue,
+                              icon: const Icon(Icons.arrow_forward_rounded,
+                                  size: 18),
+                              label: const LText('Continue learning',
+                                  maxLines: 1, overflow: TextOverflow.ellipsis))
+                        ])),
+                    const SizedBox(width: 4),
+                    SizedBox(
+                        width: artWidth,
+                        height: 126,
+                        child: Center(
+                            child: SizedBox(
+                                width: 150,
+                                height: 104,
+                                child: const LearningIllustration())))
                   ]);
             }
             return Row(children: [
