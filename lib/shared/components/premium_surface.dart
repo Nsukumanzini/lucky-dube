@@ -19,41 +19,41 @@ class FrostedSurface extends StatelessWidget {
     this.padding = const EdgeInsets.all(20),
     this.borderRadius = const BorderRadius.all(Radius.circular(24)),
     this.tint,
-    this.blur = 8,
+    this.blur = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final surface = DecoratedBox(
+      decoration: BoxDecoration(
+        color:
+            tint ?? (dark ? const Color(0xdd18253a) : const Color(0xdfffffff)),
+        borderRadius: borderRadius,
+        border: Border.all(
+          color: dark ? Colors.white.withValues(alpha: .10) : Colors.white,
+          width: 1.1,
+        ),
+        boxShadow: dark
+            ? const []
+            : const [
+                BoxShadow(
+                  color: Color(0x10213c66),
+                  blurRadius: 22,
+                  offset: Offset(0, 8),
+                ),
+              ],
+      ),
+      child: Padding(padding: padding, child: child),
+    );
     return ClipRRect(
       borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(
-          sigmaX: blur,
-          sigmaY: blur,
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tint ??
-                (dark ? const Color(0xdd18253a) : const Color(0xdfffffff)),
-            borderRadius: borderRadius,
-            border: Border.all(
-              color: dark ? Colors.white.withValues(alpha: .10) : Colors.white,
-              width: 1.1,
+      child: blur <= 0
+          ? surface
+          : BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: surface,
             ),
-            boxShadow: dark
-                ? const []
-                : const [
-                    BoxShadow(
-                      color: Color(0x10213c66),
-                      blurRadius: 22,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-          ),
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
     );
   }
 }
