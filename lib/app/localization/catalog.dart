@@ -64,7 +64,6 @@ const isiZuluCatalog = <String, String>{
       "Khulisa ukuzethemba ngokuzilolonga okufushane okuzimakayo",
   "Videos, lesson slides and study notes":
       "Amavidiyo, amaslayidi ezifundo namanothi okufunda",
-  "Video": "Ividiyo",
   "Slides": "Amaslayidi",
   "Notes": "Amanothi",
   "Filter by subject": "Hlunga ngesifundo",
@@ -277,6 +276,24 @@ const isiZuluCatalog = <String, String>{
   "Mute group": "Thulisa iqembu",
   "Unmute group": "Vula umsindo weqembu",
   "View group": "Buka iqembu",
+  "Microphone permission is needed to record a voice message.":
+      "Kudingeka imvume yemakrofoni ukuze urekhode umlayezo wezwi.",
+  "Voice recording could not start on this device.":
+      "Ukuqopha izwi akukwazanga ukuqala kule divayisi.",
+  "Voice message could not be saved.":
+      "Umlayezo wezwi awukwazanga ukulondolozwa.",
+  "Videos must be smaller than 20 MB.":
+      "Amavidiyo kufanele abe ngaphansi kuka-20 MB.",
+  "This voice message could not be played.":
+      "Lo myalezo wezwi awukwazanga ukudlalwa.",
+  "Voice message": "Umlayezo wezwi",
+  "Record voice message": "Rekhoda umlayezo wezwi",
+  "Stop and send voice message": "Misa bese uthumela umlayezo wezwi",
+  "Recording voice message": "Kuqoshwa umlayezo wezwi",
+  "Discard": "Lahla",
+  "File": "Ifayela",
+  "Image": "Isithombe",
+  "Video": "Ividiyo",
   "Conversation options": "Izinketho zengxoxo",
   "Mute conversation": "Thulisa ingxoxo",
   "Unmute conversation": "Susa ukuthulisa ingxoxo",

@@ -1,9 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import '../app/localization/app_language.dart';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:record/record.dart';
 import '../main.dart';
 import '../data/repository.dart';
 import '../shared/components/feature_page.dart';
@@ -26,12 +32,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       '${repo.learner.group} • Moderated class group',
       'Mathematics discussion',
       'Performing arts ensemble'
-    ];
-    final hints = [
-      'Ask a question or get learning support',
-      'Your class updates, together in one place',
-      'Share ideas and work through questions',
-      'Rehearsals, creative work and collaboration'
     ];
     final icons = [
       Icons.person_rounded,
@@ -60,16 +60,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const LText(
-                    'YOUR LEARNING CIRCLE',
-                    style: TextStyle(
-                      color: Color(0xff0d9488),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
                   LText(
                     'Messages',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -110,91 +100,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        const LText(
-            'Your learning circle. Helpful conversations, in the right place.'),
-        const SizedBox(height: 18),
-        LiquidGlassSurface(
-          padding: EdgeInsets.zero,
-          borderRadius: BorderRadius.circular(24),
-          tint: Theme.of(context).brightness == Brightness.light
-              ? const Color(0xeaf2f6ff)
-              : const Color(0xe51b2c49),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -28,
-                  top: -38,
-                  child: Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xff59b7aa).withValues(alpha: .12),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(width < 600 ? 17 : 22),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const LText(
-                              'Connected, with care',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 16),
-                            ),
-                            const SizedBox(height: 6),
-                            const LText(
-                              'Staff-managed channels and moderated learning groups.',
-                              style: TextStyle(height: 1.45, fontSize: 12),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0x1c0d9488),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.verified_user_rounded,
-                                      size: 14, color: Color(0xff0d9488)),
-                                  SizedBox(width: 6),
-                                  LText('A thoughtful space to learn',
-                                      style: TextStyle(
-                                          color: Color(0xff0d776d),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 10)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (width >= 380)
-                        const AnimatedIconBadge(
-                          icon: Icons.forum_rounded,
-                          color: Color(0xff3156d8),
-                          background: Color(0x263156d8),
-                          size: 56,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         TextField(
           decoration: InputDecoration(
             hintText: tr(context, 'Search conversations'),
@@ -255,23 +161,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 List<String>.from(repo.value('chat-$channel', <String>[]));
             final unread = messages.isNotEmpty &&
                 repo.value('read-$channel', false) != true;
-            final preview = messages.isEmpty
-                ? hints[i]
-                : messages.last
-                    .split('\n')
-                    .skip(1)
-                    .where((s) => s != 'Delivered locally')
-                    .join(' ');
             final accent = learnerAccents[i];
-            final metadata = messages.isEmpty
-                ? ''
-                : messages.last
-                        .split('\n')
-                        .first
-                        .split(' • ')
-                        .skip(1)
-                        .firstOrNull ??
-                    '';
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: LiquidGlassSurface(
@@ -337,58 +227,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (metadata.isNotEmpty)
-                                      LText(metadata,
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Color(0xff64748b))),
                                   ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      i == 0
-                                          ? Icons.badge_outlined
-                                          : Icons.shield_outlined,
-                                      size: 13,
-                                      color: accent,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    LText(
-                                      i == 0
-                                          ? 'STAFF CONVERSATION'
-                                          : 'MODERATED LEARNING GROUP',
-                                      style: TextStyle(
-                                        color: accent,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: .7,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 7),
-                                Text(
-                                  messages.isEmpty ||
-                                          messages.last.startsWith('Educator')
-                                      ? tr(context, preview)
-                                      : preview,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: unread
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                    fontWeight: unread
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                    fontSize: 12,
-                                  ),
                                 ),
                               ],
                             ),
@@ -415,11 +254,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   size: 52,
                 ),
                 const SizedBox(height: 12),
-                const LText('No conversations found',
+                const LText('No conversations',
                     style: TextStyle(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 5),
-                const LText(
-                    'Try another name or switch the conversation filter.'),
                 if (query.isNotEmpty)
                   TextButton(
                     onPressed: () => setState(() => query = ''),
@@ -428,20 +264,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               ],
             ),
           ),
-        const SizedBox(height: 12),
-        const Row(
-          children: [
-            Icon(Icons.lock_outline_rounded,
-                size: 14, color: Color(0xff0d9488)),
-            SizedBox(width: 6),
-            Expanded(
-              child: LText(
-                'Conversations stay within school-managed channels.',
-                style: TextStyle(fontSize: 10, color: Color(0xff64748b)),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -459,6 +281,13 @@ class ConversationScreen extends StatefulWidget {
 class _ConversationScreenState extends State<ConversationScreen> {
   final text = TextEditingController();
   final scroll = ScrollController();
+  final recorder = AudioRecorder();
+  StreamSubscription<Uint8List>? recordingSubscription;
+  Completer<void>? recordingDone;
+  BytesBuilder recordingBytes = BytesBuilder(copy: false);
+  Timer? recordingTimer;
+  int recordingSeconds = 0;
+  bool recording = false;
   bool muted = false;
   List<String> get groupMembers {
     final learner = widget.repo.learner;
@@ -486,6 +315,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
       'Educator • 08:00\nWelcome! Keep this space respectful, ask questions and help each other learn.',
       if (names.isNotEmpty) '${names[0].split(' • ').first} • 08:12\n$prompt',
       if (names.length > 1) '${names[1].split(' • ').first} • 08:16\n$reply',
+      if (names.isNotEmpty)
+        '${names[0].split(' • ').first} • 08:21\nAttachment • image\nStudy reference.jpg • 1.2 MB',
+      if (names.length > 1)
+        '${names[1].split(' • ').first} • 08:26\nAttachment • video\nPractice clip.mp4 • 8.4 MB',
+      'Educator • 08:29\nAttachment • file\nTerm 4 learning guide.pdf • 640 KB',
     ];
   }
 
@@ -507,8 +341,153 @@ class _ConversationScreenState extends State<ConversationScreen> {
   void dispose() {
     text.dispose();
     scroll.dispose();
+    recordingTimer?.cancel();
+    recordingSubscription?.cancel();
+    unawaited(recorder.dispose());
     super.dispose();
   }
+
+  Future<void> startVoiceRecording() async {
+    try {
+      if (!await recorder.hasPermission()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: LText(
+                'Microphone permission is needed to record a voice message.'),
+          ));
+        }
+        return;
+      }
+      recordingBytes = BytesBuilder(copy: false);
+      recordingDone = Completer<void>();
+      final stream = await recorder.startStream(const RecordConfig(
+        encoder: AudioEncoder.pcm16bits,
+        sampleRate: 16000,
+        numChannels: 1,
+      ));
+      recordingSubscription = stream.listen(
+        recordingBytes.add,
+        onError: (Object error, StackTrace stack) {
+          if (recordingDone?.isCompleted == false) {
+            recordingDone!.completeError(error, stack);
+          }
+        },
+        onDone: () {
+          if (recordingDone?.isCompleted == false) {
+            recordingDone!.complete();
+          }
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        recording = true;
+        recordingSeconds = 0;
+      });
+      recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+        setState(() => recordingSeconds++);
+        if (recordingSeconds >= 30) stopVoiceRecording();
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: LText('Voice recording could not start on this device.'),
+        ));
+      }
+    }
+  }
+
+  Future<void> stopVoiceRecording({bool discard = false}) async {
+    recordingTimer?.cancel();
+    recordingTimer = null;
+    try {
+      if (discard) {
+        await recorder.cancel();
+        await recordingSubscription?.cancel();
+        recordingSubscription = null;
+        if (mounted) setState(() => recording = false);
+        return;
+      }
+      await recorder.stop();
+      final done = recordingDone;
+      if (done != null && !done.isCompleted) {
+        await done.future.timeout(const Duration(seconds: 2), onTimeout: () {});
+      }
+      final pcm = recordingBytes.takeBytes();
+      final seconds = recordingSeconds;
+      recordingSubscription = null;
+      if (mounted) setState(() => recording = false);
+      if (pcm.isEmpty) return;
+      final wav = _wavBytes(pcm);
+      send('Voice • ${seconds.clamp(1, 30)}s • ${base64Encode(wav)}');
+    } catch (_) {
+      if (mounted) {
+        setState(() => recording = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: LText('Voice message could not be saved.'),
+        ));
+      }
+    }
+  }
+
+  Uint8List _wavBytes(Uint8List pcm) {
+    const sampleRate = 16000;
+    const channels = 1;
+    const bitsPerSample = 16;
+    final header = ByteData(44)
+      ..setUint32(0, 0x46464952, Endian.little) // RIFF
+      ..setUint32(4, 36 + pcm.length, Endian.little)
+      ..setUint32(8, 0x45564157, Endian.little) // WAVE
+      ..setUint32(12, 0x20746d66, Endian.little) // fmt
+      ..setUint32(16, 16, Endian.little)
+      ..setUint16(20, 1, Endian.little)
+      ..setUint16(22, channels, Endian.little)
+      ..setUint32(24, sampleRate, Endian.little)
+      ..setUint32(28, sampleRate * channels * bitsPerSample ~/ 8, Endian.little)
+      ..setUint16(32, channels * bitsPerSample ~/ 8, Endian.little)
+      ..setUint16(34, bitsPerSample, Endian.little)
+      ..setUint32(36, 0x61746164, Endian.little) // data
+      ..setUint32(40, pcm.length, Endian.little);
+    return Uint8List.fromList([...header.buffer.asUint8List(), ...pcm]);
+  }
+
+  Future<void> attachFiles() async {
+    final selection = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+      withData: false,
+    );
+    if (selection == null || !mounted) return;
+    final tooLargeVideos = selection.files.where((file) {
+      final extension = (file.extension ?? '').toLowerCase();
+      return const {'mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'}
+              .contains(extension) &&
+          file.size >= 20 * 1024 * 1024;
+    }).toList();
+    if (tooLargeVideos.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: LText('Videos must be smaller than 20 MB.'),
+      ));
+    }
+    final accepted = selection.files
+        .where((file) => !tooLargeVideos.contains(file))
+        .toList();
+    for (final file in accepted) {
+      final extension = (file.extension ?? '').toLowerCase();
+      final type =
+          const {'jpg', 'jpeg', 'png', 'gif', 'webp'}.contains(extension)
+              ? 'image'
+              : const {'mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'}
+                      .contains(extension)
+                  ? 'video'
+                  : 'file';
+      send('Attachment • $type\n${file.name} • ${_formatFileSize(file.size)}');
+    }
+  }
+
+  String _formatFileSize(int bytes) => bytes < 1024 * 1024
+      ? '${(bytes / 1024).ceil()} KB'
+      : '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
 
   void send(String body) {
     if (body.trim().isEmpty) return;
@@ -863,23 +842,47 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (recording) ...[
+                        Row(
+                          children: [
+                            Container(
+                              width: 9,
+                              height: 9,
+                              decoration: const BoxDecoration(
+                                  color: Color(0xffdc2626),
+                                  shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 8),
+                            LText(
+                                'Recording voice message • 00:${recordingSeconds.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                    color: Color(0xffdc2626),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12)),
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () =>
+                                  stopVoiceRecording(discard: true),
+                              icon: const Icon(Icons.delete_outline_rounded,
+                                  size: 17),
+                              label: const LText('Discard'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           IconButton(
                             tooltip: tr(context, 'Share attachment'),
-                            onPressed: () async {
-                              final files =
-                                  await FilePicker.platform.pickFiles();
-                              if (files != null && mounted) {
-                                send('Attachment: ${files.names.join(', ')}');
-                              }
-                            },
+                            onPressed: recording ? null : attachFiles,
                             icon: const Icon(Icons.add_circle_outline_rounded),
                           ),
                           Expanded(
                             child: TextField(
                               controller: text,
+                              enabled: !recording,
                               minLines: 1,
                               maxLines: 4,
                               textInputAction: TextInputAction.send,
@@ -895,13 +898,29 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 ),
                               ),
                               onChanged: (_) => setState(() {}),
-                              onSubmitted: send,
+                              onSubmitted: recording ? null : send,
                             ),
                           ),
                           const SizedBox(width: 8),
+                          IconButton(
+                            tooltip: tr(
+                                context,
+                                recording
+                                    ? 'Stop and send voice message'
+                                    : 'Record voice message'),
+                            onPressed: recording
+                                ? stopVoiceRecording
+                                : startVoiceRecording,
+                            color: recording
+                                ? const Color(0xffdc2626)
+                                : const Color(0xff0d9488),
+                            icon: Icon(recording
+                                ? Icons.stop_circle_rounded
+                                : Icons.mic_rounded),
+                          ),
                           IconButton.filled(
                             tooltip: tr(context, 'Send message'),
-                            onPressed: text.text.trim().isEmpty
+                            onPressed: recording || text.text.trim().isEmpty
                                 ? null
                                 : () => send(text.text),
                             icon: const Icon(Icons.send_rounded),
@@ -1099,36 +1118,26 @@ class MessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (body.startsWith('Attachment:')) ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.insert_drive_file_rounded,
-                        size: 18,
-                        color: sent ? Colors.white : const Color(0xff3156d8),
-                      ),
-                      const SizedBox(width: 7),
-                      LText(
-                        'Attachment',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: sent ? Colors.white : null,
-                        ),
-                      ),
-                    ],
+                if (body.startsWith('Voice • '))
+                  VoiceMessagePlayer(
+                    encodedAudio: body.split(' • ').skip(2).join(' • '),
+                    durationLabel: body.split(' • ').elementAtOrNull(1) ?? '',
+                    sent: sent,
+                  )
+                else if (body.startsWith('Attachment •'))
+                  ChatAttachmentCard(body: body, sent: sent)
+                else if (body.startsWith('Attachment:'))
+                  ChatAttachmentCard(body: body, sent: sent)
+                else
+                  Text(
+                    message.startsWith('Educator') ? tr(context, body) : body,
+                    style: TextStyle(
+                      color: sent
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.onSurface,
+                      height: 1.55,
+                    ),
                   ),
-                  const SizedBox(height: 5),
-                ],
-                Text(
-                  message.startsWith('Educator') ? tr(context, body) : body,
-                  style: TextStyle(
-                    color: sent
-                        ? Colors.white
-                        : Theme.of(context).colorScheme.onSurface,
-                    height: 1.55,
-                  ),
-                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1192,6 +1201,213 @@ class MessageBubble extends StatelessWidget {
               widthFactor: sent ? .9 : .94,
               alignment: sent ? Alignment.centerRight : Alignment.centerLeft,
               child: content,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChatAttachmentCard extends StatelessWidget {
+  final String body;
+  final bool sent;
+  const ChatAttachmentCard({super.key, required this.body, required this.sent});
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = body.split('\n');
+    final header = lines.first.split(' • ');
+    final type = header.length > 1 ? header[1].toLowerCase() : 'file';
+    final detail = lines.length > 1
+        ? lines.skip(1).join(' ')
+        : body.replaceFirst('Attachment:', '').trim();
+    final icon = type == 'image'
+        ? Icons.image_rounded
+        : type == 'video'
+            ? Icons.video_file_rounded
+            : Icons.insert_drive_file_rounded;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 190, maxWidth: 290),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: sent
+            ? Colors.white.withValues(alpha: .13)
+            : const Color(0xffedf3ff),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: sent ? Colors.white24 : const Color(0x223156d8),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: sent ? Colors.white.withValues(alpha: .15) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon,
+                color: sent ? Colors.white : const Color(0xff3156d8), size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LText(
+                    type == 'file'
+                        ? 'File'
+                        : type[0].toUpperCase() + type.substring(1),
+                    style: TextStyle(
+                      color: sent ? Colors.white : const Color(0xff3156d8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    )),
+                const SizedBox(height: 3),
+                Text(
+                  detail,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: sent ? Colors.white : const Color(0xff27364d),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class VoiceMessagePlayer extends StatefulWidget {
+  final String encodedAudio;
+  final String durationLabel;
+  final bool sent;
+  const VoiceMessagePlayer({
+    super.key,
+    required this.encodedAudio,
+    required this.durationLabel,
+    required this.sent,
+  });
+
+  @override
+  State<VoiceMessagePlayer> createState() => _VoiceMessagePlayerState();
+}
+
+class _VoiceMessagePlayerState extends State<VoiceMessagePlayer> {
+  late final AudioPlayer player = AudioPlayer();
+  StreamSubscription<PlayerState>? stateSubscription;
+  StreamSubscription<Duration>? durationSubscription;
+  StreamSubscription<Duration>? positionSubscription;
+  StreamSubscription<void>? completionSubscription;
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
+  bool playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    stateSubscription = player.onPlayerStateChanged.listen((state) {
+      if (mounted) setState(() => playing = state == PlayerState.playing);
+    });
+    durationSubscription = player.onDurationChanged.listen((value) {
+      if (mounted) setState(() => duration = value);
+    });
+    positionSubscription = player.onPositionChanged.listen((value) {
+      if (mounted) setState(() => position = value);
+    });
+    completionSubscription = player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => position = Duration.zero);
+    });
+  }
+
+  @override
+  void dispose() {
+    stateSubscription?.cancel();
+    durationSubscription?.cancel();
+    positionSubscription?.cancel();
+    completionSubscription?.cancel();
+    unawaited(player.dispose());
+    super.dispose();
+  }
+
+  Future<void> toggle() async {
+    try {
+      if (playing) {
+        await player.pause();
+      } else {
+        final bytes = base64Decode(widget.encodedAudio);
+        if (position >= duration && duration > Duration.zero) {
+          await player.seek(Duration.zero);
+        }
+        await player.play(BytesSource(bytes, mimeType: 'audio/wav'));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: LText('This voice message could not be played.'),
+        ));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = widget.sent ? Colors.white : const Color(0xff26364f);
+    final progress = duration.inMilliseconds == 0
+        ? 0.0
+        : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 210, maxWidth: 300),
+      child: Row(
+        children: [
+          IconButton.filledTonal(
+            onPressed: toggle,
+            style: IconButton.styleFrom(
+              backgroundColor: widget.sent
+                  ? Colors.white.withValues(alpha: .2)
+                  : const Color(0xffdce8ff),
+              foregroundColor:
+                  widget.sent ? Colors.white : const Color(0xff3156d8),
+            ),
+            icon:
+                Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LText('Voice message',
+                    style: TextStyle(
+                        color: foreground,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12)),
+                const SizedBox(height: 7),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 4,
+                    color: widget.sent ? Colors.white : const Color(0xff3156d8),
+                    backgroundColor:
+                        widget.sent ? Colors.white24 : const Color(0x223156d8),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                LText(widget.durationLabel,
+                    style: TextStyle(
+                        color: widget.sent
+                            ? Colors.white70
+                            : const Color(0xff64748b),
+                        fontSize: 10)),
+              ],
             ),
           ),
         ],
