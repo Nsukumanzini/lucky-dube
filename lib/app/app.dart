@@ -9,6 +9,7 @@ import 'localization/app_language.dart';
 import '../main.dart';
 import '../features/screens.dart';
 import '../features/learning_screens.dart';
+import '../features/splash/splash_screen.dart';
 import '../shared/components/premium_surface.dart';
 
 class LuckyApp extends ConsumerStatefulWidget {
@@ -25,7 +26,7 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
   }
 
   late final router = GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     redirect: (context, state) =>
         ref.read(repositoryProvider).state['session'] == null &&
                 (state.uri.path.startsWith('/subject/') ||
@@ -34,6 +35,9 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             ? '/home'
             : null,
     routes: [
+      GoRoute(
+          path: '/splash',
+          pageBuilder: (c, s) => _screenPage(s, const SplashScreen())),
       GoRoute(
           path: '/subject/:name',
           pageBuilder: (c, s) => _screenPage(

@@ -43,7 +43,7 @@ const isiZuluCatalog = <String, String>{
   "Save": "Londoloza",
   "Close": "Vala",
   "Back": "Emuva",
-  "Done": "Kwenziwe",
+  "Done": "Kuqediwe",
   "All": "Konke",
   "Upcoming": "Okuzayo",
   "Submitted": "Kuthunyelwe",
@@ -581,4 +581,19 @@ const isiZuluCatalog = <String, String>{
       "Lo msebenzi wokuzilolonga awushintshi imiphumela esemthethweni eshicilelwe.",
   "Open Resources to browse your learning guides and saved materials.":
       "Vula Izinsiza ukuze ubone iziqondiso zokufunda nezinto ozilondolozile.",
+  "Work": "Umsebenzi",
+  "Classwork": "Umsebenzi wasekilasini",
+  "Choose a subject to continue learning":
+      "Khetha isifundo ukuze uqhubeke nokufunda",
+  "Search subjects": "Sesha izifundo",
+  "Classwork and homework": "Umsebenzi wasekilasini nowasekhaya",
+  "To complete": "Okusamele kuqedwe",
+  "Due next": "Okulandelayo okufanele kwenziwe",
+  "Open school calendar": "Vula ikhalenda lesikole",
+  "You’re all caught up here": "Usuqedile konke lapha",
+  "No work matches your search": "Akukho misebenzi ehambisana nosesho lwakho",
+  "To do": "Okumele kwenziwe",
+  "Continue": "Qhubeka",
+  "Due 27 Nov, 16:00": "Kufuneka ngomhlaka 27 Nov, 16:00",
+  "School calendar": "Ikhalenda lesikole",
 };

@@ -56,6 +56,7 @@ class Learner {
 class LearningItem {
   final String id, title, subject, kind, body;
   final int grade, term;
+  final String? workType;
   const LearningItem(
     this.id,
     this.title,
@@ -64,6 +65,7 @@ class LearningItem {
     this.body,
     this.grade, {
     this.term = 4,
+    this.workType,
   });
 }
 
@@ -180,6 +182,11 @@ class MockRepository extends LearnerRepository {
                 kind,
                 'Learning objective: explain key ideas, apply them to a real example and reflect on your method.\n\n1. Read the question carefully and identify what is known.\n2. Describe the principle in your own words.\n3. Work through an example and check your answer.\n\nOriginal learning material by Optimal Growth Technologies SA. No textbook content is reproduced.',
                 grade,
+                workType: kind == 'Assignment'
+                    ? subjects(grade).indexOf(subject).isEven
+                        ? 'Classwork'
+                        : 'Homework'
+                    : null,
               ),
       ];
   List<LearningItem> content(String kind) =>

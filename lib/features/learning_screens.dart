@@ -50,7 +50,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 LText(
-                  '${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or attach a file. Resubmission is permitted.',
+                  '${widget.item.workType ?? 'Homework'} • ${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or attach a file. Resubmission is permitted.',
                 ),
                 const SizedBox(height: 16),
                 TextField(

@@ -2,7 +2,10 @@
 
 Implemented source:
 - [x] Configurable institution identity, nine fictional learners, twelve teacher names, grade-specific subject lists.
+- [x] Animated Lucky Dube wordmark launch screen with original learner, book, art and music illustrations.
 - [x] Material 3, adaptive navigation, onboarding, local sign-in, remember session and recovery explanation.
+- [x] Subjects destination with name-only catalogue cards and colourful subject workspace tabs.
+- [x] Work destination with classwork/homework tabs, searchable tasks and submission state.
 - [x] Dashboard and links to learner modules.
 - [x] Local original text lesson previews, completion, saved/download markers.
 - [x] Homework responses, filename attachment selection, drafts, submissions and history.
@@ -25,7 +28,7 @@ Outstanding before claiming the full requested production deliverable:
 - [ ] Full dynamic timetable weeks, breaks and current-period highlighting; calendar event dates currently reuse the selected day for demonstration.
 - [ ] Announcement category filtering and audience fixtures beyond the currently shared school notices.
 - [ ] Per-notification routing/read states and preferences controlling generated notifications.
-- [ ] Complete support guides, reduced motion controls, skeletons and splash transition.
+- [ ] Complete support guides and skeletons.
 - [ ] Feature-separated clean architecture and an expanded typed repository contract.
 - [ ] Full acceptance tests for every module and manual screen-reader/platform QA.
 

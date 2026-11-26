@@ -26,7 +26,7 @@ class Portal extends ConsumerStatefulWidget {
 class _PortalState extends ConsumerState<Portal> {
   String query = '', filter = 'All';
   String? lessonSubject;
-  int onboarding = 0, week = 0;
+  int onboarding = 0, week = 0, workTab = -1;
   DateTime day = DateTime(2026, 11, 26);
   bool weekly = false;
   final number = TextEditingController(text: 'LD80001'),
@@ -157,8 +157,9 @@ class _PortalState extends ConsumerState<Portal> {
     if (r.state['session'] == null) return login();
     final wide = MediaQuery.sizeOf(context).width >= 768;
     final phone = MediaQuery.sizeOf(context).width < 600;
-    final nav = ['home', 'subjects', 'calendar', 'messages', 'profile'];
-    final selected = nav.indexOf(widget.page);
+    final nav = ['home', 'subjects', 'work', 'messages', 'profile'];
+    final selected =
+        nav.indexOf(widget.page == 'homework' ? 'work' : widget.page);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: phone ? 60 : null,
@@ -232,19 +233,13 @@ class _PortalState extends ConsumerState<Portal> {
                       [
                         Icons.dashboard_outlined,
                         Icons.auto_stories_outlined,
-                        Icons.calendar_month_outlined,
+                        Icons.assignment_turned_in_outlined,
                         Icons.forum_outlined,
                         Icons.person_outline,
                       ][i],
                     ),
                     label: LText(
-                      [
-                        'Home',
-                        'Subjects',
-                        'Calendar',
-                        'Messages',
-                        'Profile'
-                      ][i],
+                      ['Home', 'Subjects', 'Work', 'Messages', 'Profile'][i],
                     ),
                   ),
                 ),
@@ -319,7 +314,7 @@ class _PortalState extends ConsumerState<Portal> {
                       [
                         Icons.home_outlined,
                         Icons.menu_book,
-                        Icons.calendar_month,
+                        Icons.assignment_turned_in_rounded,
                         Icons.chat_bubble_outline,
                         Icons.person_outline,
                       ][i],
@@ -329,7 +324,7 @@ class _PortalState extends ConsumerState<Portal> {
                         [
                           'Home',
                           'Subjects',
-                          'Calendar',
+                          'Work',
                           'Messages',
                           'Profile',
                         ][i]),
@@ -699,6 +694,9 @@ class _PortalState extends ConsumerState<Portal> {
         return quizzes();
       case 'calendar':
         return calendar();
+      case 'work':
+      case 'homework':
+        return work();
       case 'messages':
         return messages();
       case 'profile':
@@ -706,7 +704,6 @@ class _PortalState extends ConsumerState<Portal> {
       case 'settings':
         return settings();
       case 'resources':
-      case 'homework':
       case 'results':
         return catalogue();
       case 'timetable':
@@ -771,8 +768,10 @@ class _PortalState extends ConsumerState<Portal> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: MockRepository.school.modules
-                  .where((s) => s != 'Subjects')
+              children: [
+                ...MockRepository.school.modules.where((s) => s != 'Subjects'),
+                'School calendar',
+              ]
                   .map(
                     (s) => ActionChip(
                       avatar: const Icon(Icons.arrow_outward, size: 16),
@@ -834,6 +833,7 @@ class _PortalState extends ConsumerState<Portal> {
         'Lessons': 'lessons',
         'Quizzes': 'quizzes',
         'Homework': 'homework',
+        'School calendar': 'calendar',
         'Assessments': 'assessments',
         'Performing arts': 'performing-arts',
       }[s] ??
@@ -1111,7 +1111,7 @@ class _PortalState extends ConsumerState<Portal> {
                   'Result': 'Academic results',
                 }[kind]!,
           subjectMode
-              ? 'Your enrolled subjects • Term 4'
+              ? 'Choose a subject to continue learning'
               : 'Learning content • Grade ${r.learner.grade}',
         ),
         if (kind == 'Result')
@@ -1146,11 +1146,23 @@ class _PortalState extends ConsumerState<Portal> {
               ],
             ),
           ),
-        search(
-          kind == 'Assignment'
-              ? ['All', 'Upcoming', 'Submitted', 'Overdue', 'Marked']
-              : ['All', 'Term 4', 'Saved'],
-        ),
+        if (subjectMode)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: tr(context, 'Search subjects'),
+              ),
+              onChanged: (value) => setState(() => query = value.toLowerCase()),
+            ),
+          )
+        else
+          search(
+            kind == 'Assignment'
+                ? ['All', 'Upcoming', 'Submitted', 'Overdue', 'Marked']
+                : ['All', 'Term 4', 'Saved'],
+          ),
         ...list.where((s) => s.toLowerCase().contains(query)).where((s) {
           if (subjectMode) return filter != 'Saved';
           final e = r.content(kind).firstWhere((e) => e.title == s);
@@ -1166,15 +1178,7 @@ class _PortalState extends ConsumerState<Portal> {
           return true;
         }).map((s) {
           if (subjectMode) {
-            return LiquidGlassSurface(
-              padding: EdgeInsets.zero,
-              child: tile(
-                s,
-                '${MockRepository.teachers[r.subjects(r.learner.grade).indexOf(s) % 12]} • ${r.completed} lessons complete\n1 pending task • Latest result 76% • Next lesson 10:15',
-                Icons.auto_stories,
-                () => subject(s),
-              ),
-            );
+            return _subjectCard(s, r.subjects(r.learner.grade).indexOf(s));
           }
           final e = r.content(kind).firstWhere((e) => e.title == s);
           return LiquidGlassSurface(
@@ -1194,6 +1198,290 @@ class _PortalState extends ConsumerState<Portal> {
         if (list.where((s) => s.toLowerCase().contains(query)).isEmpty)
           const LText('No matching content. Try another search.'),
       ],
+    );
+  }
+
+  Widget _subjectCard(String name, int index) {
+    final color = learnerAccents[index % learnerAccents.length];
+    final icon = switch (name) {
+      'Mathematics' => Icons.functions_rounded,
+      'English' || 'IsiZulu' => Icons.menu_book_rounded,
+      'Natural Sciences' => Icons.science_rounded,
+      'Social Sciences' || 'Geography' => Icons.public_rounded,
+      'Technology' => Icons.precision_manufacturing_rounded,
+      'Creative Arts' || 'Music' || 'Dramatic Arts' => Icons.palette_rounded,
+      'Life Orientation' => Icons.favorite_rounded,
+      _ => Icons.auto_stories_rounded,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 11),
+      child: LiquidGlassSurface(
+        padding: EdgeInsets.zero,
+        tint: color.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(23),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(23),
+            onTap: () => subject(name),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 16),
+              child: Row(children: [
+                AnimatedIconBadge(
+                    icon: icon,
+                    color: color,
+                    background: color.withValues(alpha: .14),
+                    size: 48),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: LText(name,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+                Icon(Icons.arrow_forward_rounded, color: color),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget work() {
+    final all = r.content('Assignment');
+    final classwork =
+        all.where((item) => item.workType == 'Classwork').toList();
+    final homework = all.where((item) => item.workType == 'Homework').toList();
+    final selected = workTab >= 0
+        ? workTab
+        : widget.page == 'homework'
+            ? 1
+            : 0;
+    final items = selected == 0 ? classwork : homework;
+    final visible = items.where((item) {
+      final status = r.value(item.id, {}) as Map;
+      final submitted = status['submitted'] == true;
+      final matchesFilter = filter == 'All' ||
+          filter == 'Submitted' && submitted ||
+          filter == 'Upcoming' && !submitted ||
+          filter == 'Overdue' && !submitted && item.term < 4 ||
+          filter == 'Marked' && status['marked'] == true;
+      final matchesQuery = query.isEmpty ||
+          '${item.title} ${item.subject}'.toLowerCase().contains(query);
+      return matchesFilter && matchesQuery;
+    }).toList();
+    final submittedCount = items
+        .where((item) => (r.value(item.id, {}) as Map)['submitted'] == true)
+        .length;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      heading('Work', 'Classwork and homework • Grade ${r.learner.grade}'),
+      LayoutBuilder(
+          builder: (context, constraints) =>
+              Wrap(spacing: 10, runSpacing: 10, children: [
+                _workStat(
+                    'To complete',
+                    '${items.length - submittedCount}',
+                    Icons.edit_note_rounded,
+                    const Color(0xfff08756),
+                    constraints.maxWidth),
+                _workStat(
+                    'Submitted',
+                    '$submittedCount',
+                    Icons.task_alt_rounded,
+                    const Color(0xff0ca995),
+                    constraints.maxWidth),
+                _workStat(
+                    'Due next',
+                    items.isEmpty ? '—' : '27 Nov',
+                    Icons.calendar_today_rounded,
+                    const Color(0xff4c5fe8),
+                    constraints.maxWidth),
+              ])),
+      const SizedBox(height: 18),
+      Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.light
+              ? const Color(0xdfffffff)
+              : const Color(0xb923344c),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: .75)),
+        ),
+        child: Row(children: [
+          _workTabChip('Classwork', Icons.edit_document, classwork.length, 0),
+          _workTabChip('Homework', Icons.home_work_rounded, homework.length, 1),
+        ]),
+      ),
+      const SizedBox(height: 16),
+      search(['All', 'Upcoming', 'Submitted', 'Overdue', 'Marked']),
+      for (final item in visible)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: LiquidGlassSurface(
+            padding: EdgeInsets.zero,
+            tint: learnerAccents[items.indexOf(item) % learnerAccents.length]
+                .withValues(alpha: .055),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => openItem(item),
+                child: Padding(
+                  padding: const EdgeInsets.all(17),
+                  child: Row(children: [
+                    AnimatedIconBadge(
+                      icon: Icons.assignment_outlined,
+                      color: learnerAccents[
+                          items.indexOf(item) % learnerAccents.length],
+                      size: 48,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          LText(item.title,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 5),
+                          LText(
+                              '${item.subject} • Term ${item.term} • Due 27 Nov, 16:00',
+                              style: Theme.of(context).textTheme.bodySmall),
+                        ])),
+                    const SizedBox(width: 8),
+                    _workStatus(
+                        (r.value(item.id, {}) as Map)['submitted'] == true),
+                  ]),
+                ),
+              ),
+            ),
+          ),
+        ),
+      if (visible.isEmpty)
+        LiquidGlassSurface(
+          child: Column(children: [
+            const Icon(Icons.inbox_rounded, size: 38, color: Color(0xff0ca995)),
+            const SizedBox(height: 9),
+            LText(
+                query.isEmpty
+                    ? 'You’re all caught up here'
+                    : 'No work matches your search',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800)),
+          ]),
+        ),
+      const SizedBox(height: 14),
+      OutlinedButton.icon(
+        onPressed: () => go('calendar'),
+        icon: const Icon(Icons.calendar_month_rounded),
+        label: const LText('Open school calendar'),
+      ),
+    ]);
+  }
+
+  Widget _workTabChip(String title, IconData icon, int count, int index) {
+    final active = (workTab >= 0
+            ? workTab
+            : widget.page == 'homework'
+                ? 1
+                : 0) ==
+        index;
+    final color =
+        index == 0 ? const Color(0xff4c5fe8) : const Color(0xff0ca995);
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: active,
+        child: InkWell(
+          onTap: () => setState(() => workTab = index),
+          borderRadius: BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 13),
+            decoration: BoxDecoration(
+              color: active ? color.withValues(alpha: .14) : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: active
+                      ? color.withValues(alpha: .25)
+                      : Colors.transparent),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 6),
+              Flexible(
+                  child: LText(title,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: active
+                              ? color
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800))),
+              const SizedBox(width: 5),
+              Text('$count',
+                  style: TextStyle(
+                      color: active
+                          ? color
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _workStat(String title, String value, IconData icon, Color color,
+          double width) =>
+      SizedBox(
+        width: width < 560 ? width : (width - 20) / 3,
+        child: LiquidGlassSurface(
+          padding: const EdgeInsets.all(14),
+          tint: color.withValues(alpha: .08),
+          child: Row(children: [
+            AnimatedIconBadge(icon: icon, color: color, size: 40),
+            const SizedBox(width: 9),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(value,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900)),
+                  LText(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall),
+                ])),
+          ]),
+        ),
+      );
+
+  Widget _workStatus(bool submitted) {
+    final color = submitted ? const Color(0xff159465) : const Color(0xffe99328);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: .13),
+          borderRadius: BorderRadius.circular(20)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(submitted ? Icons.check_circle_rounded : Icons.schedule_rounded,
+            size: 14, color: color),
+        const SizedBox(width: 4),
+        LText(submitted ? 'Done' : 'To do',
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w800)),
+      ]),
     );
   }
 
