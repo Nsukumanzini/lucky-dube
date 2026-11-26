@@ -23,84 +23,116 @@ class InboxScreen extends ConsumerStatefulWidget {
 }
 
 class _InboxScreenState extends ConsumerState<InboxScreen> {
-  String query = '', filter = 'All';
+  String query = '';
+  int selectedTab = 0;
+
   @override
   Widget build(BuildContext context) {
     final repo = ref.watch(repositoryProvider);
-    final channels = [
-      '${MockRepository.teachers[0]} • Class teacher',
-      '${repo.learner.group} • Moderated class group',
-      'Mathematics discussion',
-      'Performing arts ensemble'
+    final teacher = '${MockRepository.teachers[0]} • Class teacher';
+    final groups = <(String, IconData, Color)>[
+      (
+        '${repo.learner.group} • Moderated class group',
+        Icons.groups_rounded,
+        const Color(0xff4c5fe8)
+      ),
+      (
+        'Mathematics discussion',
+        Icons.functions_rounded,
+        const Color(0xff0ca995)
+      ),
+      (
+        'Performing arts ensemble',
+        Icons.theater_comedy_rounded,
+        const Color(0xff9a5de0)
+      ),
     ];
-    final icons = [
-      Icons.person_rounded,
-      Icons.groups_rounded,
-      Icons.functions_rounded,
-      Icons.theater_comedy_rounded
+    final contacts = <(String, String, IconData, Color)>[
+      (teacher, teacher, Icons.school_rounded, const Color(0xff0ca995)),
+      for (final id in repo.friends)
+        if (repo.classmate(id) case final person?)
+          (
+            person.name,
+            'friend:${person.id}',
+            Icons.person_rounded,
+            learnerAccents[person.grade % learnerAccents.length]
+          ),
     ];
-    final unreadCount = channels.where((channel) {
+    final destinations = selectedTab == 0
+        ? contacts
+            .map((contact) => (
+                  contact.$1,
+                  contact.$2,
+                  contact.$3,
+                  contact.$4,
+                ))
+            .toList()
+        : groups
+            .map((group) =>
+                (group.$1.split(' • ').first, group.$1, group.$2, group.$3))
+            .toList();
+    final visible = destinations
+        .where((item) => item.$1.toLowerCase().contains(query))
+        .toList();
+    final allChannels = [
+      ...contacts.map((contact) => contact.$2),
+      ...groups.map((group) => group.$1),
+    ];
+    final unreadCount = allChannels.where((channel) {
       final messages =
           List<String>.from(repo.value('chat-$channel', <String>[]));
       return messages.isNotEmpty && repo.value('read-$channel', false) != true;
     }).length;
-    final filtered = channels.asMap().entries.where((e) =>
-        e.value.toLowerCase().contains(query) &&
-        (filter == 'All' ||
-            filter == 'Staff' && e.key == 0 ||
-            filter == 'Groups' && e.key > 0));
-    final width = MediaQuery.sizeOf(context).width;
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    final incomingCount = repo.incomingFriendRequests.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  LText(
-                    'Messages',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -.7,
-                        ),
+        Row(children: [
+          Expanded(
+            child: LText(
+              'Messages',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.7,
                   ),
-                ],
-              ),
             ),
-            if (unreadCount > 0)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xffe9efff),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.mark_chat_unread_rounded,
-                        size: 16, color: Color(0xff4c5fe8)),
-                    const SizedBox(width: 6),
-                    LText('$unreadCount',
-                        style: const TextStyle(
-                            color: Color(0xff4c5fe8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800)),
-                    const SizedBox(width: 4),
-                    const LText('unread',
-                        style: TextStyle(
-                            color: Color(0xff4c5fe8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              ),
-          ],
-        ),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: () => context.push('/friend-requests'),
+            icon: Badge(
+              isLabelVisible: incomingCount > 0,
+              label: Text('$incomingCount'),
+              child: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+            ),
+            label: LText(compact ? 'Requests' : 'Friend requests'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
+              foregroundColor: const Color(0xff4c5fe8),
+              backgroundColor: const Color(0x194c5fe8),
+            ),
+          ),
+        ]),
         const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.light
+                ? const Color(0xdfffffff)
+                : const Color(0xb923344c),
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: Colors.white.withValues(alpha: .75)),
+          ),
+          child: Row(children: [
+            _sectionTab('Friends', Icons.people_alt_rounded, contacts.length, 0,
+                const Color(0xff4c5fe8)),
+            _sectionTab('Group chats', Icons.forum_rounded, groups.length, 1,
+                const Color(0xff0ca995)),
+          ]),
+        ),
+        const SizedBox(height: 14),
         TextField(
           decoration: InputDecoration(
             hintText: tr(context, 'Search conversations'),
@@ -112,56 +144,34 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                     onPressed: () => setState(() => query = ''),
                     icon: const Icon(Icons.close_rounded),
                   ),
-            filled: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide.none,
-            ),
           ),
           onChanged: (value) => setState(() => query = value.toLowerCase()),
         ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final option in [
-                ('All', channels.length),
-                ('Staff', 1),
-                ('Groups', channels.length - 1),
-              ]) ...[
-                ChoiceChip(
-                  selected: filter == option.$1,
-                  onSelected: (_) => setState(() => filter = option.$1),
-                  avatar: Icon(
-                    option.$1 == 'All'
-                        ? Icons.forum_outlined
-                        : option.$1 == 'Staff'
-                            ? Icons.person_outline_rounded
-                            : Icons.groups_outlined,
-                    size: 16,
-                    color: filter == option.$1
-                        ? const Color(0xff4c5fe8)
-                        : const Color(0xff0ca995),
-                  ),
-                  label: LText('${option.$1}  ${option.$2}'),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
+        const SizedBox(height: 13),
+        if (unreadCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 9),
+            child: Row(children: [
+              const Icon(Icons.mark_chat_unread_rounded,
+                  size: 16, color: Color(0xff4c5fe8)),
+              const SizedBox(width: 6),
+              LText('$unreadCount unread',
+                  style: const TextStyle(
+                      color: Color(0xff4c5fe8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800)),
+            ]),
           ),
-        ),
-        const SizedBox(height: 12),
-        for (final entry in filtered)
+        for (final destination in visible)
           Builder(builder: (context) {
-            final i = entry.key, channel = entry.value;
+            final channel = destination.$2;
             final messages =
                 List<String>.from(repo.value('chat-$channel', <String>[]));
             final unread = messages.isNotEmpty &&
                 repo.value('read-$channel', false) != true;
-            final accent = learnerAccents[i];
+            final accent = destination.$4;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: LiquidGlassSurface(
@@ -169,7 +179,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 borderRadius: BorderRadius.circular(22),
                 tint: unread
                     ? (Theme.of(context).brightness == Brightness.light
-                        ? const Color(0xebf8faff)
+                        ? Color.lerp(Colors.white, accent, .055)
                         : const Color(0xeb1c2d49))
                     : null,
                 child: Material(
@@ -182,89 +192,297 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           '/conversation/${Uri.encodeComponent(channel)}');
                     },
                     child: Padding(
-                      padding: EdgeInsets.all(width < 600 ? 14 : 17),
-                      child: Row(
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              AnimatedIconBadge(
-                                  icon: icons[i], color: accent, size: 50),
-                              if (unread)
-                                Positioned(
-                                  right: -1,
-                                  bottom: -1,
-                                  child: Container(
-                                    width: 14,
-                                    height: 14,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xff4c5fe8),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: Colors.white, width: 2),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                      padding: EdgeInsets.all(compact ? 14 : 17),
+                      child: Row(children: [
+                        Stack(clipBehavior: Clip.none, children: [
+                          AnimatedIconBadge(
+                            icon: destination.$3,
+                            color: accent,
+                            size: 50,
                           ),
-                          const SizedBox(width: 13),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: LText(
-                                        channel.split(' • ').first,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontWeight: unread
-                                              ? FontWeight.w800
-                                              : FontWeight.w700,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                          if (unread)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 13,
+                                height: 13,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff4c5fe8),
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
                                 ),
-                              ],
+                              ),
                             ),
+                        ]),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: LText(
+                            destination.$1,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontWeight:
+                                    unread ? FontWeight.w900 : FontWeight.w700,
+                                fontSize: 15),
                           ),
-                          const SizedBox(width: 8),
-                          Icon(Icons.chevron_right_rounded,
-                              color: accent, size: 20),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right_rounded,
+                            color: accent, size: 21),
+                      ]),
                     ),
                   ),
                 ),
               ),
             );
           }),
-        if (filtered.isEmpty)
+        if (visible.isEmpty)
           LiquidGlassSurface(
             width: double.infinity,
-            child: Column(
-              children: [
-                const AnimatedIconBadge(
-                  icon: Icons.search_off_rounded,
-                  color: Color(0xff9a5de0),
-                  size: 52,
+            child: Column(children: [
+              AnimatedIconBadge(
+                icon: selectedTab == 0
+                    ? Icons.person_search_rounded
+                    : Icons.forum_outlined,
+                color: selectedTab == 0
+                    ? const Color(0xff9a5de0)
+                    : const Color(0xff0ca995),
+                size: 52,
+              ),
+              const SizedBox(height: 12),
+              LText(
+                query.isNotEmpty
+                    ? 'No conversations match your search'
+                    : selectedTab == 0
+                        ? 'No friends yet'
+                        : 'No group chats',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              if (selectedTab == 0 && query.isEmpty) ...[
+                const SizedBox(height: 10),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push('/friend-requests'),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                  label: const LText('Find classmates'),
                 ),
-                const SizedBox(height: 12),
-                const LText('No conversations',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
-                if (query.isNotEmpty)
-                  TextButton(
-                    onPressed: () => setState(() => query = ''),
-                    child: const LText('Clear search'),
-                  ),
               ],
-            ),
+              if (query.isNotEmpty)
+                TextButton(
+                  onPressed: () => setState(() => query = ''),
+                  child: const LText('Clear search'),
+                ),
+            ]),
           ),
       ],
+    );
+  }
+
+  Widget _sectionTab(
+      String label, IconData icon, int count, int index, Color color) {
+    final active = selectedTab == index;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: active,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+          onTap: () => setState(() => selectedTab = index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
+            decoration: BoxDecoration(
+              color: active ? color.withValues(alpha: .14) : Colors.transparent,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(
+                  color: active
+                      ? color.withValues(alpha: .23)
+                      : Colors.transparent),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 7),
+              Flexible(
+                child: LText(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: active
+                            ? color
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800)),
+              ),
+              const SizedBox(width: 5),
+              Text('$count',
+                  style: TextStyle(
+                      color: active
+                          ? color
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FriendRequestsScreen extends ConsumerStatefulWidget {
+  const FriendRequestsScreen({super.key});
+
+  @override
+  ConsumerState<FriendRequestsScreen> createState() =>
+      _FriendRequestsScreenState();
+}
+
+class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
+  int selectedTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = ref.watch(repositoryProvider);
+    final classmates = repo.learners
+        .where((person) =>
+            person.group == repo.learner.group && person.id != repo.learner.id)
+        .toList();
+    final incoming = repo.incomingFriendRequests
+        .map(repo.classmate)
+        .whereType<Learner>()
+        .toList();
+    final outgoing = repo.outgoingFriendRequests
+        .map(repo.classmate)
+        .whereType<Learner>()
+        .toList();
+    final available = classmates
+        .where((person) =>
+            !repo.friends.contains(person.id) &&
+            !repo.incomingFriendRequests.contains(person.id) &&
+            !repo.outgoingFriendRequests.contains(person.id))
+        .toList();
+    final people = [incoming, outgoing, available][selectedTab];
+
+    return FeaturePage(
+      title: const LText('Friend requests'),
+      content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        LText('Friends in ${repo.learner.group}',
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w900)),
+        const SizedBox(height: 7),
+        const LText('You can connect with learners in your class.'),
+        const SizedBox(height: 18),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _requestTab('Incoming', incoming.length, 0, const Color(0xff4c5fe8),
+              Icons.move_to_inbox_rounded),
+          _requestTab('Sent', outgoing.length, 1, const Color(0xff0ca995),
+              Icons.outbox_rounded),
+          _requestTab('Find classmates', available.length, 2,
+              const Color(0xff9a5de0), Icons.person_search_rounded),
+        ]),
+        const SizedBox(height: 16),
+        if (people.isEmpty)
+          LiquidGlassSurface(
+            width: double.infinity,
+            child: Column(children: [
+              AnimatedIconBadge(
+                icon: selectedTab == 0
+                    ? Icons.mark_email_read_rounded
+                    : selectedTab == 1
+                        ? Icons.outbox_rounded
+                        : Icons.people_alt_rounded,
+                color:
+                    learnerAccents[(selectedTab + 1) % learnerAccents.length],
+                size: 54,
+              ),
+              const SizedBox(height: 12),
+              LText(
+                selectedTab == 0
+                    ? 'No new friend requests'
+                    : selectedTab == 1
+                        ? 'No sent friend requests'
+                        : 'No classmates to add right now',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center,
+              ),
+            ]),
+          ),
+        for (final person in people)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: LiquidGlassSurface(
+              padding: const EdgeInsets.all(15),
+              tint: learnerAccents[person.grade % learnerAccents.length]
+                  .withValues(alpha: .05),
+              child: Column(children: [
+                Row(children: [
+                  AnimatedIconBadge(
+                    icon: Icons.person_rounded,
+                    color: learnerAccents[person.grade % learnerAccents.length],
+                    size: 46,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LText(person.name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                  ),
+                  if (selectedTab == 2)
+                    FilledButton.tonalIcon(
+                      onPressed: () => repo.sendFriendRequest(person.id),
+                      icon:
+                          const Icon(Icons.person_add_alt_1_rounded, size: 17),
+                      label: const LText('Add'),
+                    )
+                  else if (selectedTab == 1)
+                    TextButton.icon(
+                      onPressed: () => repo.cancelFriendRequest(person.id),
+                      icon: const Icon(Icons.close_rounded, size: 17),
+                      label: const LText('Cancel'),
+                    ),
+                ]),
+                if (selectedTab == 0) ...[
+                  const SizedBox(height: 12),
+                  Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                    OutlinedButton(
+                      onPressed: () =>
+                          repo.respondToFriendRequest(person.id, accept: false),
+                      child: const LText('Decline'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          repo.respondToFriendRequest(person.id, accept: true),
+                      icon: const Icon(Icons.check_rounded, size: 18),
+                      label: const LText('Accept'),
+                    ),
+                  ]),
+                ],
+              ]),
+            ),
+          ),
+      ]),
+    );
+  }
+
+  Widget _requestTab(
+      String label, int count, int index, Color color, IconData icon) {
+    final active = selectedTab == index;
+    return ChoiceChip(
+      selected: active,
+      selectedColor: color.withValues(alpha: .14),
+      side: BorderSide(color: color.withValues(alpha: active ? .32 : .16)),
+      avatar: Icon(icon, size: 17, color: color),
+      label: LText('$label  $count',
+          style: TextStyle(
+              color: active ? color : Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w800)),
+      onSelected: (_) => setState(() => selectedTab = index),
     );
   }
 }
@@ -289,6 +507,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
   int recordingSeconds = 0;
   bool recording = false;
   bool muted = false;
+  bool get isFriendChannel => widget.channel.startsWith('friend:');
+  String get friendId => widget.channel.substring('friend:'.length);
+  String get conversationTitle => isFriendChannel
+      ? widget.repo.classmate(friendId)?.name ?? 'Friend'
+      : widget.channel.split(' • ').first;
   List<String> get groupMembers {
     final learner = widget.repo.learner;
     final classOnly = widget.channel.contains('Moderated class group');
@@ -328,6 +551,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     super.initState();
     muted = widget.repo.value('mute-${widget.channel}', false) as bool;
     if (!widget.channel.contains('Class teacher') &&
+        !isFriendChannel &&
         widget.repo.value('chat-${widget.channel}') == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && widget.repo.value('chat-${widget.channel}') == null) {
@@ -493,15 +717,19 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (body.trim().isEmpty) return;
     final key = 'chat-${widget.channel}';
     final list = List<String>.from(widget.repo.value(key, <String>[]));
-    if (list.isEmpty && !widget.channel.contains('Class teacher')) {
+    if (list.isEmpty &&
+        !widget.channel.contains('Class teacher') &&
+        !isFriendChannel) {
       list.addAll(initialGroupMessages());
     }
     list.add('You • 10:20\n${body.trim()}\nSaved on this device');
-    list.add(
-        'Learning guide • 10:21 • Suggested reply\nThank you for sharing. Review the study guide and bring your questions to your next lesson.');
+    if (!isFriendChannel) {
+      list.add(
+          'Learning guide • 10:21 • Suggested reply\nThank you for sharing. Review the study guide and bring your questions to your next lesson.');
+      widget.repo.notify('A learning guide response is ready');
+    }
     widget.repo.put(key, list);
-    widget.repo.put('read-${widget.channel}', false);
-    widget.repo.notify('A learning guide response is ready');
+    widget.repo.put('read-${widget.channel}', true);
     text.clear();
     setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -517,7 +745,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final group = !widget.channel.contains('Class teacher');
+    final group = !isFriendChannel && !widget.channel.contains('Class teacher');
     final members = group ? groupMembers : const <String>[];
     final messages = List<String>.from(
         widget.repo.value('chat-${widget.channel}', <String>[]));
@@ -572,7 +800,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   LText(
-                    widget.channel.split(' • ').first,
+                    conversationTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -584,7 +812,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   LText(
                     group
                         ? 'Learning group • ${members.length} members'
-                        : 'Class teacher • Staff-managed',
+                        : isFriendChannel
+                            ? 'Friend'
+                            : 'Class teacher • Staff-managed',
                     style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xff64748b),
@@ -673,19 +903,23 @@ class _ConversationScreenState extends State<ConversationScreen> {
                               size: 34,
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   LText(
-                                    'School-managed conversation',
+                                    isFriendChannel
+                                        ? 'Friend conversation'
+                                        : 'School-managed conversation',
                                     style: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 12),
                                   ),
                                   SizedBox(height: 3),
                                   LText(
-                                    'Automated practice replies may appear here.',
+                                    isFriendChannel
+                                        ? 'Messages are saved on this device.'
+                                        : 'Automated practice replies may appear here.',
                                     style:
                                         TextStyle(fontSize: 11, height: 1.35),
                                   ),

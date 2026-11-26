@@ -91,9 +91,15 @@ abstract class LearnerRepository extends ChangeNotifier {
   List<Learner> get learners;
   List<LearningItem> get items;
   Map<String, dynamic> get state;
+  List<String> get friends;
+  List<String> get incomingFriendRequests;
+  List<String> get outgoingFriendRequests;
   Future<void> save();
   Future<bool> signIn(String id, String password, bool remember);
   void setValue(String key, dynamic value);
+  bool sendFriendRequest(String learnerId);
+  void respondToFriendRequest(String learnerId, {required bool accept});
+  void cancelFriendRequest(String learnerId);
 }
 
 class MockRepository extends LearnerRepository {
@@ -156,6 +162,92 @@ class MockRepository extends LearnerRepository {
           'Life Orientation',
           'Creative Arts',
         ];
+
+  Map<String, List<String>> _relationshipMap(String name) {
+    final raw = state[name];
+    if (raw is! Map) return {};
+    return raw.map((key, value) => MapEntry(
+          key.toString(),
+          value is List ? List<String>.from(value) : <String>[],
+        ));
+  }
+
+  @override
+  List<String> get friends =>
+      _relationshipMap('friendships')[learner.id] ?? const <String>[];
+
+  @override
+  List<String> get incomingFriendRequests =>
+      _relationshipMap('friendRequests')[learner.id] ?? const <String>[];
+
+  @override
+  List<String> get outgoingFriendRequests {
+    final requests = _relationshipMap('friendRequests');
+    return requests.entries
+        .where((entry) => entry.value.contains(learner.id))
+        .map((entry) => entry.key)
+        .toList();
+  }
+
+  Learner? classmate(String id) {
+    for (final person in learners) {
+      if (person.id == id &&
+          person.id != learner.id &&
+          person.group == learner.group) {
+        return person;
+      }
+    }
+    return null;
+  }
+
+  @override
+  bool sendFriendRequest(String learnerId) {
+    final peer = classmate(learnerId);
+    if (peer == null || friends.contains(peer.id)) return false;
+    final requests = _relationshipMap('friendRequests');
+    final outgoing = requests[learner.id] ?? <String>[];
+    if (outgoing.contains(peer.id)) return false;
+    outgoing.add(peer.id);
+    requests[learner.id] = outgoing;
+    state['friendRequests'] = requests;
+    save();
+    notifyListeners();
+    return true;
+  }
+
+  @override
+  void respondToFriendRequest(String learnerId, {required bool accept}) {
+    if (classmate(learnerId) == null) return;
+    final requests = _relationshipMap('friendRequests');
+    final incoming = requests[learner.id] ?? <String>[];
+    if (!incoming.remove(learnerId)) return;
+    requests[learner.id] = incoming;
+    state['friendRequests'] = requests;
+    if (accept) {
+      final relations = _relationshipMap('friendships');
+      final mine = relations[learner.id] ?? <String>[];
+      final peers = relations[learnerId] ?? <String>[];
+      if (!mine.contains(learnerId)) mine.add(learnerId);
+      if (!peers.contains(learner.id)) peers.add(learner.id);
+      relations[learner.id] = mine;
+      relations[learnerId] = peers;
+      state['friendships'] = relations;
+    }
+    save();
+    notifyListeners();
+  }
+
+  @override
+  void cancelFriendRequest(String learnerId) {
+    final requests = _relationshipMap('friendRequests');
+    final outgoing = requests[learner.id] ?? <String>[];
+    if (!outgoing.remove(learnerId)) return;
+    requests[learner.id] = outgoing;
+    state['friendRequests'] = requests;
+    save();
+    notifyListeners();
+  }
+
   @override
   List<LearningItem> get items => [
         for (final grade in school.grades)

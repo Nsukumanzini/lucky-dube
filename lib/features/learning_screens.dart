@@ -467,7 +467,13 @@ class ConversationRoute extends ConsumerWidget {
       'Mathematics discussion',
       'Performing arts ensemble'
     ];
-    if (!authorised.contains(channel)) {
+    final friendId = channel.startsWith('friend:')
+        ? channel.substring('friend:'.length)
+        : null;
+    final acceptedFriend = friendId != null &&
+        r.classmate(friendId) != null &&
+        r.friends.contains(friendId);
+    if (!authorised.contains(channel) && !acceptedFriend) {
       return const FeaturePage(
           title: LText('Conversation unavailable'),
           content:

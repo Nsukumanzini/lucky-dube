@@ -8,6 +8,7 @@ import 'localization/app_language.dart';
 
 import '../main.dart';
 import '../features/screens.dart';
+import '../features/communication_screens.dart';
 import '../features/learning_screens.dart';
 import '../features/splash/splash_screen.dart';
 import '../shared/components/premium_surface.dart';
@@ -31,13 +32,17 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         ref.read(repositoryProvider).state['session'] == null &&
                 (state.uri.path.startsWith('/subject/') ||
                     state.uri.path.startsWith('/learning/') ||
-                    state.uri.path.startsWith('/conversation/'))
+                    state.uri.path.startsWith('/conversation/') ||
+                    state.uri.path == '/friend-requests')
             ? '/home'
             : null,
     routes: [
       GoRoute(
           path: '/splash',
           pageBuilder: (c, s) => _screenPage(s, const SplashScreen())),
+      GoRoute(
+          path: '/friend-requests',
+          pageBuilder: (c, s) => _screenPage(s, const FriendRequestsScreen())),
       GoRoute(
           path: '/subject/:name',
           pageBuilder: (c, s) => _screenPage(
