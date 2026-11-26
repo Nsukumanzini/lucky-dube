@@ -11,6 +11,7 @@ import '../features/screens.dart';
 import '../features/communication_screens.dart';
 import '../features/learning_screens.dart';
 import '../features/splash/splash_screen.dart';
+import '../features/assistant/study_assistant.dart';
 import '../shared/components/premium_surface.dart';
 
 class LuckyApp extends ConsumerStatefulWidget {
@@ -40,6 +41,9 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
       GoRoute(
           path: '/splash',
           pageBuilder: (c, s) => _screenPage(s, const SplashScreen())),
+      GoRoute(
+          path: '/study-assistant',
+          pageBuilder: (c, s) => _screenPage(s, const StudyAssistantScreen())),
       GoRoute(
           path: '/friend-requests',
           pageBuilder: (c, s) => _screenPage(s, const FriendRequestsScreen())),
@@ -105,6 +109,9 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
                 child: child!,
               ),
             ),
+            if (!const ['/splash', '/study-assistant']
+                .contains(router.routeInformationProvider.value.uri.path))
+              const FloatingStudyAssistant(),
           ],
         ),
       ),

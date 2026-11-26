@@ -969,7 +969,20 @@ class _PortalState extends ConsumerState<Portal> {
       );
 
   Widget quizzes() {
-    final quizzes = r.content('Quiz').where((item) {
+    final allQuizzes = r.content('Quiz');
+    final completed =
+        allQuizzes.where((item) => r.value('quiz-${item.id}') != null).toList();
+    final average = completed.isEmpty
+        ? 0
+        : (completed.fold<int>(
+                  0,
+                  (total, item) =>
+                      total + (r.value('quiz-${item.id}') as num).round(),
+                ) /
+                (completed.length * 3) *
+                100)
+            .round();
+    final quizzes = allQuizzes.where((item) {
       final score = r.value('quiz-${item.id}');
       final matchesStatus = filter == 'All' ||
           (filter == 'Completed' && score != null) ||
@@ -982,32 +995,131 @@ class _PortalState extends ConsumerState<Portal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         heading(
-          'Practice quizzes',
-          'Build confidence with short, self-marking practice • Grade ${r.learner.grade}',
+          'Quizzes',
+          'Build confidence with short practice activities • Grade ${r.learner.grade}',
         ),
-        search(['All', 'To practise', 'Completed']),
+        LiquidGlassSurface(
+          padding: const EdgeInsets.all(20),
+          borderRadius: BorderRadius.circular(26),
+          tint: Theme.of(context).brightness == Brightness.light
+              ? const Color(0xeef0f5ff)
+              : const Color(0xd5213150),
+          child: LayoutBuilder(builder: (context, box) {
+            final compact = box.maxWidth < 500;
+            final intro = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Icon(Icons.auto_awesome_rounded,
+                      color: Color(0xff4c5fe8), size: 18),
+                  const SizedBox(width: 8),
+                  const LText('YOUR NEXT LEARNING WIN',
+                      style: TextStyle(
+                          color: Color(0xff4c5fe8),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2)),
+                ]),
+                const SizedBox(height: 12),
+                Text('Small steps. Strong understanding.',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900, letterSpacing: -.4)),
+                const SizedBox(height: 7),
+                const LText(
+                    'Choose a subject and try a quick set of questions.',
+                    style: TextStyle(color: Color(0xff64748b), height: 1.5)),
+              ],
+            );
+            final stats = Wrap(
+              spacing: 9,
+              runSpacing: 9,
+              children: [
+                _quizStat('Available', '${allQuizzes.length}',
+                    Icons.library_books_rounded),
+                _quizStat('Completed', '${completed.length}',
+                    Icons.check_circle_rounded),
+                _quizStat('Average', '$average%', Icons.insights_rounded),
+              ],
+            );
+            return compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [intro, const SizedBox(height: 18), stats],
+                  )
+                : Row(children: [
+                    Expanded(child: intro),
+                    const SizedBox(width: 16),
+                    stats,
+                  ]);
+          }),
+        ),
+        const SizedBox(height: 16),
+        search(['All', 'To practise', 'Completed'],
+            hint: 'Search quizzes or subjects'),
         for (final item in quizzes)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: LiquidGlassSurface(
-              padding: EdgeInsets.zero,
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                leading: AnimatedIconBadge(
-                  icon: Icons.quiz_rounded,
-                  color: learnerAccents[
-                      r.subjects(r.learner.grade).indexOf(item.subject) %
-                          learnerAccents.length],
-                  size: 48,
+            padding: const EdgeInsets.only(bottom: 13),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: .96, end: 1),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              builder: (context, scale, child) => Transform.scale(
+                scale: scale,
+                alignment: Alignment.topCenter,
+                child: child,
+              ),
+              child: LiquidGlassSurface(
+                padding: EdgeInsets.zero,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () => openItem(item),
+                  child: Padding(
+                    padding: const EdgeInsets.all(17),
+                    child: Row(
+                      children: [
+                        AnimatedIconBadge(
+                          icon: Icons.quiz_rounded,
+                          color: learnerAccents[r
+                                  .subjects(r.learner.grade)
+                                  .indexOf(item.subject) %
+                              learnerAccents.length],
+                          size: 50,
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              LText(item.title,
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 5),
+                              LText('${item.subject} • Term ${item.term}',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Color(0xff64748b))),
+                              const SizedBox(height: 10),
+                              Wrap(spacing: 7, runSpacing: 7, children: [
+                                _quizTag('5 min', Icons.schedule_rounded),
+                                _quizTag('4 questions',
+                                    Icons.format_list_numbered_rounded),
+                                if (r.value('quiz-${item.id}') != null)
+                                  _quizTag(
+                                      '${r.value('quiz-${item.id}')}/3 correct',
+                                      Icons.check_circle_outline_rounded),
+                              ]),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_rounded,
+                            color: Theme.of(context).colorScheme.primary),
+                      ],
+                    ),
+                  ),
                 ),
-                title: LText(item.title),
-                subtitle: LText(
-                  '${item.subject} • Term ${item.term} • 5 min • Practice only'
-                  '${r.value('quiz-${item.id}') == null ? '' : ' • Last score ${r.value('quiz-${item.id}')}/3'}',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                onTap: () => openItem(item),
               ),
             ),
           ),
@@ -1019,6 +1131,46 @@ class _PortalState extends ConsumerState<Portal> {
       ],
     );
   }
+
+  Widget _quizStat(String label, String value, IconData icon) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .72),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0x33728be0)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: const Color(0xff4c5fe8), size: 17),
+          const SizedBox(width: 7),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 9,
+                    color: Color(0xff64748b),
+                    fontWeight: FontWeight.w700)),
+          ]),
+        ]),
+      );
+
+  Widget _quizTag(String label, IconData icon) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xffedf2ff),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 13, color: const Color(0xff4c5fe8)),
+          const SizedBox(width: 5),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xff445379),
+                  fontWeight: FontWeight.w700)),
+        ]),
+      );
 
   Widget stat(String title, String value, String sub, double width) {
     final index = [
@@ -1062,12 +1214,12 @@ class _PortalState extends ConsumerState<Portal> {
             ])));
   }
 
-  Widget search(List<String> filters) => Column(
+  Widget search(List<String> filters, {String? hint}) => Column(
         children: [
           TextField(
             decoration: InputDecoration(
               prefixIcon: Icon(Icons.search),
-              hintText: tr(context, 'Search your workspace'),
+              hintText: tr(context, hint ?? 'Search your workspace'),
             ),
             onChanged: (v) => setState(() => query = v.toLowerCase()),
           ),

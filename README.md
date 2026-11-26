@@ -1,6 +1,6 @@
 # Lucky Dube learner application
 
-Offline Flutter demonstration owned and developed by **Optimal Growth Technologies SA**. Intended presentation: 26 November 2026. This is an independent prototype with fictional people, sample subject combinations and temporary branding; no school endorsement is implied.
+Flutter learner application owned and developed by **Optimal Growth Technologies SA**. Intended presentation: 26 November 2026. It uses fictional learner profiles, sample subject combinations and temporary branding; no school endorsement is implied.
 
 ## Run
 
@@ -22,17 +22,21 @@ Platform scaffolding for Android, iOS, web and Windows is included. No API keys,
 | 9 | LD90001 | Learn123! |
 | 10 | LD10001 | Learn123! |
 
-Use Quick sign-in on the login screen. Settings also switches accounts. Remember me restores a session. Settings → Reset local information clears all locally saved state after confirmation. School-managed records are read-only. All dates displayed in the demo refer to South African school activities in November 2026.
+Use Quick sign-in on the login screen. Settings also switches accounts. Remember me restores a session. Settings → Reset local information clears all locally saved state after confirmation. School-managed records are read-only. Dates shown in the sample school calendar refer to South African school activities in November 2026.
 
-## Demonstration walkthrough
+## Learner walkthrough
 
 1. Skip or complete onboarding and choose a grade.
 2. Open Subjects → Mathematics → Lesson and mark complete.
-3. Open Homework, write an answer, save a draft, submit and view local confirmation/history.
-4. Complete a practice quiz; objective results are immediate and written answers await simulated marking. Published school marks are not changed.
-5. Open Messages, choose an authorised channel, send a message and inspect the labelled simulated response.
+3. Open Homework, write an answer, save a draft, submit and view the submission history.
+4. Complete a practice quiz; objective questions are scored immediately and the written response is included in the practice summary. Published school marks are not changed.
+5. Open Messages, choose an authorised channel and send a message.
 6. Explore announcements, calendar, attendance and the performing arts portfolio.
-7. Switch theme/account, restart and verify persisted preferences.
+7. Open the movable AI Study Assistant, ask a question about a subject, then switch theme or learner profile.
+
+## Study Assistant
+
+The movable AI Study Assistant searches the current learner’s grade-level lesson materials and returns a guided explanation for recognised subjects and topics. Conversation history and launcher position are stored per learner. The current assistant is implemented as a local topic-matching explainer; it does not call an external generative AI service. A future AI provider can be added behind a dedicated service interface if that is approved.
 
 ## Architecture and integration
 
@@ -61,7 +65,7 @@ See docs/VALIDATION.md for actual execution results and docs/FEATURE_CHECKLIST.m
 
 ## Vercel web deployment
 
-Vercel serves the tested `web-dist/` release bundle. No server, APIs or credentials are needed. To update it, run `flutter build web --release --no-web-resources-cdn`, replace `web-dist/` with `build/web/`, then commit both source and the release bundle. Source repository: https://github.com/Nsukumanzini/lucky-dube. Git-based automatic deployment requires connecting that repository to the existing Vercel project. The current release was deployed directly through the connected Vercel API. The GitHub repository is public; the deployed demo is accessible using its Vercel production URL subject to account deployment protection.
+Vercel serves the tested `web-dist/` release bundle. No server, APIs or credentials are needed. To update it, run `flutter build web --release --no-web-resources-cdn`, replace `web-dist/` with `build/web/`, then commit both source and the release bundle. Source repository: https://github.com/Nsukumanzini/lucky-dube. Git-based automatic deployment requires connecting that repository to the existing Vercel project. Production releases are deployed directly through the connected Vercel API. The GitHub repository is public; the deployed demo is accessible using its Vercel production URL subject to account deployment protection.
 
 Live production demo: https://lucky-dube.vercel.app/
 See docs/DEPLOYMENT.md for deployment status and the pending GitHub step.

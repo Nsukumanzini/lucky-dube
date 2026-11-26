@@ -508,7 +508,7 @@ const isiZuluCatalog = <String, String>{
   "Room": "Igumbi",
   "Courtyard": "Igceke",
   "Break period": "Isikhathi sekhefu",
-  "Available": "Kuyatholakala",
+  "Available": "Ekhona",
   "available": "okutholakalayo",
   "Due": "Kufanele kuthunyelwe ngo-",
   "New Term 4 assignments": "Imisebenzi emisha yethemu 4",
@@ -619,4 +619,40 @@ const isiZuluCatalog = <String, String>{
   "Friend": "Umngane",
   "Messages are saved on this device.": "Imiyalezo igcinwa kule divayisi.",
   "Requests": "Izicelo",
+  "AI Study Assistant": "Umsizi Wokufunda we-AI",
+  "Learning support": "Usizo lokufunda",
+  "Open AI Study Assistant. Drag to move.":
+      "Vula umsizi wokufunda we-AI. Hudula ukuze uwunyakazise.",
+  "Ask a question about your lessons": "Buza umbuzo ngezifundo zakho",
+  "What are you learning today?": "Yini oyifundayo namuhla?",
+  "Give me a study tip": "Nginike isu lokufunda",
+  "Ask about a lesson or topic": "Buza ngesifundo noma ngesihloko",
+  "Clear conversation?": "Sula ingxoxo?",
+  "This will remove your conversation history.":
+      "Lokhu kuzosusa umlando wengxoxo yakho.",
+  "Clear conversation": "Sula ingxoxo",
+  "Small steps. Strong understanding.":
+      "Izinyathelo ezincane. Ukuqonda okuqinile.",
+  "Choose a subject and try a quick set of questions.":
+      "Khetha isifundo bese uzama imibuzo embalwa.",
+  "YOUR NEXT LEARNING WIN": "IMPUMELELO YAKHO ELANDELAYO",
+  "Average": "Isilinganiso",
+  "5 min": "Imizuzu emi-5",
+  "4 questions": "Imibuzo emi-4",
+  "Review this answer": "Buyekeza le mpendulo",
+  "Review each answer and build on what you know.":
+      "Buyekeza izimpendulo zakho uqhubeke nokufunda.",
+  "Nice work. Review what you learned.": "Wenze kahle. Buyekeza okufundile.",
+  "Take your time and think each answer through.":
+      "Ungasheshi; cabanga ngempendulo ngayinye.",
+  "Question": "Umbuzo",
+  "1 point": "Iphuzu eli-1",
+  "Answer review": "Ukubuyekezwa kwezimpendulo",
+  "Write your response in your own words": "Bhala impendulo ngamazwi akho",
+  "Your written response will be reviewed by your educator.":
+      "Uthisha wakho uzobuyekeza impendulo yakho ebhaliwe.",
+  "Choose the answer that best explains your thinking.":
+      "Khetha impendulo echaza kahle indlela ocabanga ngayo.",
+  "out of 3 correct": "kuyizimpendulo ezi-3 ezilungile",
+  "Quiz results": "Imiphumela yemibuzo",
 };

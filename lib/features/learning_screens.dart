@@ -167,10 +167,12 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void finish() {
+    if (done) return;
     timer?.cancel();
     widget.repo.put('quiz-${widget.item.id}', MockRepository.score(answers));
+    widget.repo.put('quiz-written-${widget.item.id}', written.text.trim());
     widget.repo.notify('Practice quiz completed');
-    setState(() => done = true);
+    if (mounted) setState(() => done = true);
   }
 
   @override
@@ -190,80 +192,162 @@ class _QuizScreenState extends State<QuizScreen> {
         'A worked example and clear reasoning',
       ],
     ];
+    final score = MockRepository.score(answers);
+    const correctAnswers = [1, 0, 2];
     return FeaturePage(
-      title: LText(done ? 'Practice completion summary' : widget.item.title),
-      content: SizedBox(
-        width: 560,
-        child: SingleChildScrollView(
-          child: done
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LText(
-                      '${MockRepository.score(answers)} / 3 objective marks • ${(MockRepository.score(answers) / 3 * 100).round()}%',
-                    ),
-                    const LText(
-                      'Written response: awaiting educator feedback. This practice activity does not alter official published results.',
-                    ),
-                    for (var i = 0; i < 3; i++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: LText(
-                          '${i + 1}. ${answers[i] == [
-                                1,
-                                0,
-                                2
-                              ][i] ? 'Correct' : 'Incorrect'} • ${options[i][[
-                            1,
-                            0,
-                            2
-                          ][i]]}\nExplanation: reliable learning uses practice, verification and evidence.',
-                        ),
+      title: LText(done ? 'Quiz results' : widget.item.title),
+      content: PageReveal(
+        child: SizedBox(
+          width: 700,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LiquidGlassSurface(
+                  padding: const EdgeInsets.all(20),
+                  borderRadius: BorderRadius.circular(26),
+                  tint: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0xeef0f4ff)
+                      : const Color(0xd5213150),
+                  child: Row(children: [
+                    const AnimatedIconBadge(
+                        icon: Icons.quiz_rounded,
+                        color: Color(0xff526bea),
+                        size: 54),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          LText(widget.item.subject,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xff566bcb),
+                                  fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 4),
+                          LText(done
+                              ? 'Nice work. Review what you learned.'
+                              : 'Take your time and think each answer through.'),
+                        ],
                       ),
-                  ],
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LText(
-                      'Practice only • 1 mark per objective question\n${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')} remaining • Question ${index + 1} of 4',
                     ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(value: (index + 1) / 4),
-                    const SizedBox(height: 16),
-                    LText(questions[index]),
-                    if (index < 3)
-                      for (var i = 0; i < options[index].length; i++)
-                        ListTile(
-                          leading: Icon(answers[index] == i
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked),
-                          onTap: () => setState(() => answers[index] = i),
-                          title: LText(options[index][i]),
-                        ),
-                    if (index == 3)
-                      TextField(
-                        controller: written,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          labelText:
-                              tr(context, 'Written answer • manual marking'),
-                        ),
-                      ),
-                    FilterChip(
-                      label: const LText('Flag for review'),
-                      selected: flags.contains(index),
-                      onSelected: (v) => setState(() {
-                        if (v) {
-                          flags.add(index);
-                        } else {
-                          flags.remove(index);
-                        }
-                      }),
-                    ),
-                  ],
+                    if (!done) _timerPill(),
+                  ]),
                 ),
+                const SizedBox(height: 16),
+                if (done)
+                  _results(score, correctAnswers, options)
+                else ...[
+                  LiquidGlassSurface(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Expanded(
+                            child: LText('Question ${index + 1} of 4',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 15)),
+                          ),
+                          LText(index < 3 ? '1 point' : 'Written response',
+                              style: const TextStyle(
+                                  color: Color(0xff64748b), fontSize: 12)),
+                        ]),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: LinearProgressIndicator(
+                            value: (index + 1) / questions.length,
+                            minHeight: 8,
+                            backgroundColor: const Color(0xffe7ecf8),
+                          ),
+                        ),
+                        const SizedBox(height: 19),
+                        Container(
+                          padding: const EdgeInsets.all(17),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? const Color(0xfff5f7ff)
+                                    : const Color(0xff1b2a43),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0x337286d5)),
+                          ),
+                          child: LText(questions[index],
+                              style: const TextStyle(
+                                  fontSize: 17,
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w800)),
+                        ),
+                        const SizedBox(height: 14),
+                        if (index < 3)
+                          for (var option = 0;
+                              option < options[index].length;
+                              option++)
+                            _answerOption(options[index][option], option),
+                        if (index == 3)
+                          TextField(
+                            controller: written,
+                            minLines: 4,
+                            maxLines: 7,
+                            decoration: InputDecoration(
+                              labelText: tr(context,
+                                  'Write your response in your own words'),
+                              alignLabelWithHint: true,
+                              prefixIcon: const Icon(Icons.edit_note_rounded),
+                            ),
+                          ),
+                        const SizedBox(height: 14),
+                        Row(children: [
+                          const Icon(Icons.lightbulb_outline_rounded,
+                              color: Color(0xffed9b2b), size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                              child: Text(
+                                  index == 3
+                                      ? 'This question is not included in the automatic score.'
+                                      : 'Choose the answer that best explains your thinking.',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Color(0xff64748b)))),
+                          FilterChip(
+                            avatar: Icon(
+                                flags.contains(index)
+                                    ? Icons.flag_rounded
+                                    : Icons.outlined_flag_rounded,
+                                size: 16),
+                            label: const LText('Review'),
+                            selected: flags.contains(index),
+                            onSelected: (flag) => setState(() {
+                              if (flag) {
+                                flags.add(index);
+                              } else {
+                                flags.remove(index);
+                              }
+                            }),
+                          ),
+                        ]),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(spacing: 8, children: [
+                    for (var question = 0;
+                        question < questions.length;
+                        question++)
+                      ChoiceChip(
+                        label: Text('${question + 1}'),
+                        selected: question == index,
+                        avatar: flags.contains(question)
+                            ? const Icon(Icons.flag_rounded, size: 13)
+                            : null,
+                        onSelected: (_) => setState(() => index = question),
+                      ),
+                  ]),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
       actions: done
@@ -316,6 +400,160 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
             ],
     );
+  }
+
+  Widget _timerPill() {
+    final warning = seconds <= 60;
+    final color = warning ? const Color(0xffd94c58) : const Color(0xff536be5);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.timer_outlined, color: color, size: 17),
+        const SizedBox(width: 6),
+        Text('${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
+            style: TextStyle(color: color, fontWeight: FontWeight.w900)),
+      ]),
+    );
+  }
+
+  Widget _answerOption(String label, int option) {
+    final selected = answers[index] == option;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Material(
+        color: selected
+            ? primary.withValues(alpha: .1)
+            : Theme.of(context).colorScheme.surface.withValues(alpha: .82),
+        borderRadius: BorderRadius.circular(17),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+          onTap: () => setState(() => answers[index] = option),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(
+                  color: selected ? primary : const Color(0x336b7da5),
+                  width: selected ? 1.5 : 1),
+            ),
+            child: Row(children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected ? primary : const Color(0xffedf1fb),
+                  shape: BoxShape.circle,
+                ),
+                child: selected
+                    ? const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 18)
+                    : Text(String.fromCharCode(65 + option),
+                        style: const TextStyle(
+                            color: Color(0xff52617a),
+                            fontWeight: FontWeight.w800)),
+              ),
+              const SizedBox(width: 13),
+              Expanded(child: LText(label)),
+              if (selected)
+                Icon(Icons.check_circle_rounded, color: primary, size: 20),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _results(
+      int score, List<int> correctAnswers, List<List<String>> options) {
+    final percent = (score / 3 * 100).round();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      LiquidGlassSurface(
+        padding: const EdgeInsets.all(21),
+        borderRadius: BorderRadius.circular(26),
+        tint: Theme.of(context).brightness == Brightness.light
+            ? const Color(0xeef0f5ff)
+            : const Color(0xd5213150),
+        child: Row(children: [
+          SizedBox(
+            width: 78,
+            height: 78,
+            child: Stack(alignment: Alignment.center, children: [
+              CircularProgressIndicator(
+                value: score / 3,
+                strokeWidth: 8,
+                backgroundColor: const Color(0xffdfe6f5),
+                color: percent >= 70
+                    ? const Color(0xff279a78)
+                    : const Color(0xff536be5),
+              ),
+              Text('$percent%',
+                  style: const TextStyle(fontWeight: FontWeight.w900)),
+            ]),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LText('$score out of 3 correct',
+                    style: const TextStyle(
+                        fontSize: 19, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 5),
+                const LText('Review each answer and build on what you know.',
+                    style: TextStyle(height: 1.45, color: Color(0xff64748b))),
+              ],
+            ),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 14),
+      LiquidGlassSurface(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const LText('Answer review',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 9),
+          for (var i = 0; i < 3; i++)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                answers[i] == correctAnswers[i]
+                    ? Icons.check_circle_rounded
+                    : Icons.info_rounded,
+                color: answers[i] == correctAnswers[i]
+                    ? const Color(0xff23926e)
+                    : const Color(0xffe39a27),
+              ),
+              title: LText(
+                  'Question ${i + 1} • ${answers[i] == correctAnswers[i] ? 'Correct' : 'Review this answer'}',
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: LText(
+                  'Answer: ${options[i][correctAnswers[i]]}\nReliable learning grows through practice, checking and clear reasoning.'),
+            ),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      LiquidGlassSurface(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          const Icon(Icons.edit_note_rounded, color: Color(0xff536be5)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              written.text.trim().isEmpty
+                  ? 'No written response was added.'
+                  : 'Your written response is saved with this practice summary.',
+              style: const TextStyle(height: 1.5),
+            ),
+          ),
+        ]),
+      ),
+    ]);
   }
 }
 
