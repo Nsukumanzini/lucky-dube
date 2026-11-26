@@ -29,11 +29,15 @@ class _FloatingStudyAssistantState
   Widget build(BuildContext context) {
     final repository = ref.watch(repositoryProvider);
     return LayoutBuilder(builder: (context, constraints) {
-      const size = 66.0;
+      // A labelled pill is easier to discover than a small sparkle-only icon,
+      // especially on phones where other floating shortcuts share the edge.
+      const width = 132.0;
+      const height = 56.0;
       final maxLeft =
-          math.max(8.0, constraints.maxWidth - size - 12).toDouble();
+          math.max(8.0, constraints.maxWidth - width - 16).toDouble();
+      // Keep the launcher above the bottom navigation and mobile browser safe area.
       final maxTop =
-          math.max(8.0, constraints.maxHeight - size - 108).toDouble();
+          math.max(8.0, constraints.maxHeight - height - 112).toDouble();
       final stored = repository.value('studyAssistantPosition');
       final saved = stored is Map
           ? Offset(
@@ -53,7 +57,8 @@ class _FloatingStudyAssistantState
           top: current.dy,
           child: Semantics(
             button: true,
-            label: tr(context, 'Open AI Study Assistant. Drag to move.'),
+            label:
+                tr(context, 'Ask AI. Open the Study Assistant. Drag to move.'),
             child: GestureDetector(
               onTap: () => context.push('/study-assistant'),
               onPanUpdate: (details) => setState(() {
@@ -74,10 +79,11 @@ class _FloatingStudyAssistantState
               child: Tooltip(
                 message: tr(context, 'Ask a question about your lessons'),
                 child: Container(
-                  width: size,
-                  height: size,
+                  width: width,
+                  height: height,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(30),
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -92,10 +98,25 @@ class _FloatingStudyAssistantState
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: Colors.white,
-                    size: 30,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 9),
+                      Text(
+                        tr(context, 'Ask AI'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: .1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
