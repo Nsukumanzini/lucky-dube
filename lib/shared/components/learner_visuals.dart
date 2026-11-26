@@ -5,11 +5,183 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 const learnerAccents = [
-  Color(0xff3156d8),
-  Color(0xff0d9488),
-  Color(0xffe76a45),
-  Color(0xff8055d9)
+  Color(0xff4c5fe8),
+  Color(0xff0ca995),
+  Color(0xfff08756),
+  Color(0xff9a5de0),
+  Color(0xffe4a11b),
+  Color(0xffec6384),
 ];
+
+/// Local, swipeable lesson slides give learning outlines a visual rhythm
+/// without depending on externally hosted images or presentation services.
+class InteractiveSlideDeck extends StatefulWidget {
+  final List<String> slides;
+  final String subject;
+  const InteractiveSlideDeck(
+      {super.key, required this.slides, required this.subject});
+
+  @override
+  State<InteractiveSlideDeck> createState() => _InteractiveSlideDeckState();
+}
+
+class _InteractiveSlideDeckState extends State<InteractiveSlideDeck> {
+  late final PageController controller = PageController(viewportFraction: .93);
+  int index = 0;
+  static const colors = [
+    Color(0xff4c5fe8),
+    Color(0xff0ca995),
+    Color(0xfff08756),
+    Color(0xff9a5de0),
+    Color(0xffe4a11b),
+    Color(0xffed6682),
+  ];
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  void move(int offset) {
+    final next = (index + offset).clamp(0, widget.slides.length - 1);
+    controller.animateToPage(next,
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutCubic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.slides.isEmpty) return const SizedBox.shrink();
+    final total = widget.slides.length;
+    final accent = colors[index % colors.length];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        const Icon(Icons.swipe_rounded, size: 18, color: Color(0xff64748b)),
+        const SizedBox(width: 7),
+        const Expanded(
+            child: Text('Swipe or use the arrows to explore each idea',
+                style: TextStyle(fontSize: 13))),
+        Text('${index + 1} / $total',
+            style: TextStyle(color: accent, fontWeight: FontWeight.w800)),
+      ]),
+      const SizedBox(height: 12),
+      SizedBox(
+          height: 326,
+          child: PageView.builder(
+            controller: controller,
+            itemCount: total,
+            onPageChanged: (value) => setState(() => index = value),
+            itemBuilder: (context, i) {
+              final color = colors[i % colors.length];
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                margin: EdgeInsets.only(
+                    right: 12,
+                    top: i == index ? 0 : 10,
+                    bottom: i == index ? 0 : 10),
+                child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Stack(children: [
+                      Positioned.fill(
+                          child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color.lerp(color, Colors.white, .06)!,
+                          Color.lerp(color, const Color(0xff233d91), .22)!
+                        ],
+                      )))),
+                      Positioned(
+                          right: -25,
+                          top: -35,
+                          child: Container(
+                              width: 160,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: .12)))),
+                      Positioned(
+                          right: 24,
+                          bottom: 24,
+                          child: Icon(
+                              [
+                                Icons.auto_awesome_rounded,
+                                Icons.lightbulb_rounded,
+                                Icons.edit_note_rounded,
+                                Icons.check_circle_rounded
+                              ][i % 4],
+                              size: 76,
+                              color: Colors.white.withValues(alpha: .19))),
+                      Padding(
+                          padding: const EdgeInsets.all(26),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 13, vertical: 8),
+                                    decoration: BoxDecoration(
+                                        color:
+                                            Colors.white.withValues(alpha: .2),
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    child: Text(
+                                        '${widget.subject.toUpperCase()}  •  IDEA ${i + 1}',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.1))),
+                                const Spacer(),
+                                Text(widget.slides[i],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 21,
+                                            height: 1.5,
+                                            fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 12),
+                                Row(children: [
+                                  for (var dot = 0; dot < total; dot++)
+                                    AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 220),
+                                        margin: const EdgeInsets.only(right: 6),
+                                        width: dot == i ? 26 : 7,
+                                        height: 7,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                                alpha: dot == i ? .95 : .42),
+                                            borderRadius:
+                                                BorderRadius.circular(8)))
+                                ]),
+                              ])),
+                    ])),
+              );
+            },
+          )),
+      const SizedBox(height: 13),
+      Row(children: [
+        OutlinedButton.icon(
+            onPressed: index == 0 ? null : () => move(-1),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: const Text('Previous')),
+        const Spacer(),
+        FilledButton.icon(
+            onPressed: index == total - 1 ? null : () => move(1),
+            icon: Icon(index == total - 1
+                ? Icons.check_rounded
+                : Icons.arrow_forward_rounded),
+            label: Text(index == total - 1 ? 'Finished' : 'Next idea')),
+      ]),
+    ]);
+  }
+}
 
 /// Short entrance motion, with no recurring ticker or network assets.
 class WelcomeBanner extends StatelessWidget {
@@ -242,8 +414,8 @@ class _BooksPainter extends CustomPainter {
           p..color = const Color(0xffffbe55));
     }
 
-    book(70, 154, 198, const Color(0xff0d9488));
-    book(50, 115, 188, const Color(0xff8055d9));
+    book(70, 154, 198, const Color(0xff0ca995));
+    book(50, 115, 188, const Color(0xff9a5de0));
     book(77, 76, 180, const Color(0xff4b8af2));
     canvas.drawCircle(
         const Offset(253, 42), 27, p..color = const Color(0xffffd884));
@@ -263,7 +435,7 @@ class _BooksPainter extends CustomPainter {
     canvas.drawCircle(
         const Offset(286, 118), 6, p..color = const Color(0xff9ccabf));
     canvas.drawCircle(
-        const Offset(107, 40), 4, p..color = const Color(0xff8055d9));
+        const Offset(107, 40), 4, p..color = const Color(0xff9a5de0));
     canvas.restore();
   }
 

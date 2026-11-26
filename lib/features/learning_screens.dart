@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../data/repository.dart';
 import '../main.dart';
 import '../shared/components/feature_page.dart';
+import '../shared/components/learner_visuals.dart';
 import '../shared/components/premium_surface.dart';
 import 'communication_screens.dart';
 
@@ -49,7 +50,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 LText(
-                  '${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or a local attachment. Resubmission is permitted.',
+                  '${widget.item.subject} • ${MockRepository.teachers[0]}\nDue 27 November 2026, 16:00 SAST • 50 marks\n\nExplain the topic in your own words, give one example and describe how you checked your answer. Submit a written response or attach a file. Resubmission is permitted.',
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -79,11 +80,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     }
                   },
                   icon: const Icon(Icons.attach_file),
-                  label: const LText('Select local attachments'),
+                  label: const LText('Attach files'),
                 ),
                 if (submitted)
                   const LText(
-                    'Submission received locally • Awaiting marking.\nTeacher feedback will appear after simulated review.',
+                    'Submission saved on this device. It has not been sent to your teacher.',
                   ),
                 ...List<dynamic>.from(
                   (widget.repo.value(widget.item.id, {}) as Map)['history'] ??
@@ -110,7 +111,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(
-                  const SnackBar(content: LText('Draft saved locally')));
+                  const SnackBar(content: LText('Draft saved on this device')));
             },
             child: const LText('Save draft'),
           ),
@@ -202,7 +203,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       '${MockRepository.score(answers)} / 3 objective marks • ${(MockRepository.score(answers) / 3 * 100).round()}%',
                     ),
                     const LText(
-                      'Written response: pending simulated marking. Practice only; this does not alter official published records.',
+                      'Written response: awaiting educator feedback. This practice activity does not alter official published results.',
                     ),
                     for (var i = 0; i < 3; i++)
                       Padding(
@@ -394,7 +395,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
             LText(
                 e.kind == 'Lesson'
                     ? 'Learning objectives'
-                    : 'Original offline revision guide',
+                    : 'Original revision guide',
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             LText(e.body,
@@ -447,8 +448,8 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
                       },
                 icon: const Icon(Icons.download),
                 label: LText(r.value('download-${e.id}', false) == true
-                    ? 'Available offline'
-                    : 'Download for offline'))
+                    ? 'Saved on this device'
+                    : 'Save to this device'))
           ]
         ]);
   }
@@ -492,6 +493,8 @@ class SubjectScreen extends ConsumerWidget {
     final teacher = MockRepository.teachers[
         repo.subjects(repo.learner.grade).indexOf(subject) %
             MockRepository.teachers.length];
+    final subjectIndex = repo.subjects(repo.learner.grade).indexOf(subject);
+    final accent = learnerAccents[subjectIndex % learnerAccents.length];
     final kinds = ['Lesson', 'Resource', 'Assignment', 'Quiz', 'Result'];
     return DefaultTabController(
         length: 7,
@@ -500,21 +503,84 @@ class SubjectScreen extends ConsumerWidget {
             scrollable: false,
             content:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              LText(
-                  'Grade ${repo.learner.grade} • ${repo.learner.group} • $teacher',
-                  style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 20),
-              const TabBar(
+              LiquidGlassSurface(
+                tint: accent.withValues(alpha: .11),
+                padding: const EdgeInsets.all(18),
+                child: Row(children: [
+                  AnimatedIconBadge(
+                      icon: _subjectIcon(subject),
+                      color: accent,
+                      background: Colors.white.withValues(alpha: .78),
+                      size: 58),
+                  const SizedBox(width: 14),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        LText(subject,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 4),
+                        LText(
+                            'Grade ${repo.learner.grade} • ${repo.learner.group} • $teacher',
+                            style: Theme.of(context).textTheme.bodyMedium),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                            borderRadius: BorderRadius.circular(9),
+                            child: LinearProgressIndicator(
+                                value: .68,
+                                minHeight: 7,
+                                color: accent,
+                                backgroundColor:
+                                    accent.withValues(alpha: .14))),
+                        const SizedBox(height: 3),
+                        const LText('68% learning progress',
+                            style: TextStyle(fontSize: 11)),
+                      ])),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              TabBar(
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      accent,
+                      Color.lerp(accent, const Color(0xff4c5fe8), .42)!
+                    ]),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                          color: accent.withValues(alpha: .24),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4))
+                    ],
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 15),
+                  overlayColor:
+                      WidgetStateProperty.all(accent.withValues(alpha: .08)),
                   tabs: [
-                    Tab(text: 'Overview'),
-                    Tab(text: 'Lessons'),
-                    Tab(text: 'Materials'),
-                    Tab(text: 'Assignments'),
-                    Tab(text: 'Assessments'),
-                    Tab(text: 'Results'),
-                    Tab(text: 'Discussions')
+                    _subjectTab('Overview', Icons.dashboard_rounded,
+                        const Color(0xff4c5fe8)),
+                    _subjectTab('Lessons', Icons.auto_stories_rounded,
+                        const Color(0xff0ca995)),
+                    _subjectTab('Materials', Icons.folder_special_rounded,
+                        const Color(0xfff08756)),
+                    _subjectTab('Assignments', Icons.edit_note_rounded,
+                        const Color(0xffb454d2)),
+                    _subjectTab('Assessments', Icons.quiz_rounded,
+                        const Color(0xffe5a125)),
+                    _subjectTab('Results', Icons.auto_graph_rounded,
+                        const Color(0xff22a36a)),
+                    _subjectTab('Discussions', Icons.forum_rounded,
+                        const Color(0xffec6384)),
                   ]),
               const SizedBox(height: 20),
               Expanded(
@@ -571,4 +637,24 @@ class SubjectScreen extends ConsumerWidget {
               ]))
             ])));
   }
+
+  static Tab _subjectTab(String title, IconData icon, Color color) => Tab(
+        height: 48,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 7),
+          Text(title),
+        ]),
+      );
+
+  static IconData _subjectIcon(String subject) => switch (subject) {
+        'Mathematics' => Icons.functions_rounded,
+        'English' || 'IsiZulu' => Icons.menu_book_rounded,
+        'Natural Sciences' => Icons.science_rounded,
+        'Social Sciences' || 'Geography' => Icons.public_rounded,
+        'Technology' => Icons.precision_manufacturing_rounded,
+        'Creative Arts' || 'Music' || 'Dramatic Arts' => Icons.palette_rounded,
+        'Life Orientation' => Icons.favorite_rounded,
+        _ => Icons.auto_stories_rounded,
+      };
 }

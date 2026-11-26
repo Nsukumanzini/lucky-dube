@@ -78,6 +78,7 @@ class LiquidGlassSurface extends StatelessWidget {
   final bool edgeHighlight;
   final double? width;
   final double? height;
+  final bool playfulArt;
 
   const LiquidGlassSurface({
     super.key,
@@ -89,6 +90,7 @@ class LiquidGlassSurface extends StatelessWidget {
     this.edgeHighlight = true,
     this.width,
     this.height,
+    this.playfulArt = true,
   });
 
   @override
@@ -123,6 +125,14 @@ class LiquidGlassSurface extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          if (playfulArt)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _SurfaceMotifPainter(dark: dark),
+                ),
+              ),
+            ),
           if (edgeHighlight)
             Positioned.fill(
               child: IgnorePointer(
@@ -187,9 +197,44 @@ class LiquidGlassBar extends StatelessWidget {
       borderRadius: BorderRadius.zero,
       blur: 22,
       tint: dark ? const Color(0xc9142038) : const Color(0xc7ffffff),
+      playfulArt: false,
       child: const SizedBox.expand(),
     );
   }
+}
+
+/// Quietly cheerful, locally drawn colour details keep repeated cards from
+/// feeling like a wall of identical white panels.
+class _SurfaceMotifPainter extends CustomPainter {
+  final bool dark;
+  const _SurfaceMotifPainter({required this.dark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 80 || size.height < 54) return;
+    final opacity = dark ? .075 : .11;
+    final palette = [
+      const Color(0xff5590ff),
+      const Color(0xff42c6b0),
+      const Color(0xffffbe62),
+      const Color(0xffb38cff),
+      const Color(0xffff8a78),
+    ];
+    final origin = Offset(size.width - 15, 13);
+    for (var i = 0; i < 4; i++) {
+      canvas.drawCircle(
+        origin + Offset(-i * 8.0, i.isEven ? 0 : 7),
+        3.1,
+        Paint()..color = palette[i].withValues(alpha: opacity),
+      );
+    }
+    final paint = Paint()..color = palette[4].withValues(alpha: opacity * .5);
+    canvas.drawCircle(Offset(size.width - 1, size.height * .6), 28, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SurfaceMotifPainter oldDelegate) =>
+      oldDelegate.dark != dark;
 }
 
 /// Compact entrance used when a destination changes. Respects reduced motion.
@@ -331,10 +376,10 @@ class _LearnerArtPainter extends CustomPainter {
     Icons.school_rounded,
   ];
   static const _colors = <Color>[
-    Color(0xff3156d8),
-    Color(0xff0d9488),
-    Color(0xffe76a45),
-    Color(0xff8055d9),
+    Color(0xff4c5fe8),
+    Color(0xff0ca995),
+    Color(0xfff08756),
+    Color(0xff9a5de0),
   ];
 
   @override

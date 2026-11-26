@@ -82,17 +82,17 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.mark_chat_unread_rounded,
-                        size: 16, color: Color(0xff3156d8)),
+                        size: 16, color: Color(0xff4c5fe8)),
                     const SizedBox(width: 6),
                     LText('$unreadCount',
                         style: const TextStyle(
-                            color: Color(0xff3156d8),
+                            color: Color(0xff4c5fe8),
                             fontSize: 12,
                             fontWeight: FontWeight.w800)),
                     const SizedBox(width: 4),
                     const LText('unread',
                         style: TextStyle(
-                            color: Color(0xff3156d8),
+                            color: Color(0xff4c5fe8),
                             fontSize: 12,
                             fontWeight: FontWeight.w800)),
                   ],
@@ -143,8 +143,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             : Icons.groups_outlined,
                     size: 16,
                     color: filter == option.$1
-                        ? const Color(0xff3156d8)
-                        : const Color(0xff0d9488),
+                        ? const Color(0xff4c5fe8)
+                        : const Color(0xff0ca995),
                   ),
                   label: LText('${option.$1}  ${option.$2}'),
                 ),
@@ -198,7 +198,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                     width: 14,
                                     height: 14,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xff3156d8),
+                                      color: const Color(0xff4c5fe8),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                           color: Colors.white, width: 2),
@@ -250,7 +250,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               children: [
                 const AnimatedIconBadge(
                   icon: Icons.search_off_rounded,
-                  color: Color(0xff8055d9),
+                  color: Color(0xff9a5de0),
                   size: 52,
                 ),
                 const SizedBox(height: 12),
@@ -496,12 +496,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (list.isEmpty && !widget.channel.contains('Class teacher')) {
       list.addAll(initialGroupMessages());
     }
-    list.add('You • 10:20\n${body.trim()}\nDelivered locally');
+    list.add('You • 10:20\n${body.trim()}\nSaved on this device');
     list.add(
-        'Educator • 10:21 • Automated practice reply\nThank you for your message. Review the study guide and bring your questions to our next lesson.');
+        'Learning guide • 10:21 • Suggested reply\nThank you for sharing. Review the study guide and bring your questions to your next lesson.');
     widget.repo.put(key, list);
     widget.repo.put('read-${widget.channel}', false);
-    widget.repo.notify('New automated practice reply');
+    widget.repo.notify('A learning guide response is ready');
     text.clear();
     setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -547,7 +547,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   backgroundColor: const Color(0xffe7efff),
                   child: Icon(
                     group ? Icons.groups_rounded : Icons.person_rounded,
-                    color: const Color(0xff3156d8),
+                    color: const Color(0xff4c5fe8),
                   ),
                 ),
                 Positioned(
@@ -625,7 +625,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 widget.repo.put('reported-${widget.channel}', true);
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: LText(
-                    'Report saved locally only. For real support, contact a responsible adult.',
+                    'This report remains on this device and has not been sent. For real support, speak directly to a responsible adult.',
                   ),
                 ));
               }
@@ -669,7 +669,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                           children: [
                             const AnimatedIconBadge(
                               icon: Icons.shield_rounded,
-                              color: Color(0xff0d9488),
+                              color: Color(0xff0ca995),
                               size: 34,
                             ),
                             const SizedBox(width: 12),
@@ -726,7 +726,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                             part.isEmpty ? '' : part[0])
                                         .join(),
                                     style: const TextStyle(
-                                      color: Color(0xff3156d8),
+                                      color: Color(0xff4c5fe8),
                                       fontSize: 9,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -913,7 +913,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 : startVoiceRecording,
                             color: recording
                                 ? const Color(0xffdc2626)
-                                : const Color(0xff0d9488),
+                                : const Color(0xff0ca995),
                             icon: Icon(recording
                                 ? Icons.stop_circle_rounded
                                 : Icons.mic_rounded),
@@ -985,7 +985,7 @@ class _GroupChatDetailsScreenState extends State<GroupChatDetailsScreen> {
                 children: [
                   const AnimatedIconBadge(
                     icon: Icons.groups_rounded,
-                    color: Color(0xff3156d8),
+                    color: Color(0xff4c5fe8),
                     background: Color(0x263156d8),
                     size: 76,
                   ),
@@ -1017,15 +1017,15 @@ class _GroupChatDetailsScreenState extends State<GroupChatDetailsScreen> {
                       child: Icon(
                         i == 0 ? Icons.school_rounded : Icons.person_rounded,
                         color: i == 0
-                            ? const Color(0xff0d9488)
-                            : const Color(0xff3156d8),
+                            ? const Color(0xff0ca995)
+                            : const Color(0xff4c5fe8),
                       ),
                     ),
                     title: LText(widget.members[i].split(' • ').first),
                     subtitle: LText(widget.members[i].split(' • ').last),
                     trailing: i == 0
                         ? const Icon(Icons.verified_user_rounded,
-                            color: Color(0xff0d9488), size: 18)
+                            color: Color(0xff0ca995), size: 18)
                         : null,
                   ),
                 ),
@@ -1070,15 +1070,11 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final sent = message.startsWith('You');
     final parts = message.split('\n');
-    final body = parts
-        .skip(1)
-        .where((s) => s != 'Delivered locally')
-        .join('\n')
-        .replaceFirst('Demonstration attachment:', 'Attachment:');
+    final body =
+        parts.skip(1).where((s) => s != 'Saved on this device').join('\n');
     final header = parts.first.split(' • ');
     final educator = !sent;
-    final automated =
-        parts.first.contains('Automated') || parts.first.contains('Simulated');
+    final automated = parts.first.contains('Suggested reply');
     final sender = header.first;
     final content = ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 570),
@@ -1092,7 +1088,7 @@ class MessageBubble extends StatelessWidget {
               sent
                   ? 'You'
                   : automated
-                      ? 'Educator • Automated practice reply'
+                      ? 'Learning guide • Suggested reply'
                       : sender,
               style: const TextStyle(
                 fontSize: 11,
@@ -1155,7 +1151,7 @@ class MessageBubble extends StatelessWidget {
                           size: 14, color: Colors.white70),
                       const SizedBox(width: 4),
                       const LText(
-                        'Saved locally',
+                        'On this device',
                         style: TextStyle(fontSize: 10, color: Colors.white70),
                       ),
                     ],
@@ -1182,13 +1178,13 @@ class MessageBubble extends StatelessWidget {
                   automated ? const Color(0xffdff3ed) : const Color(0xffe9efff),
               child: automated
                   ? const Icon(Icons.auto_awesome_rounded,
-                      size: 16, color: Color(0xff0d9488))
+                      size: 16, color: Color(0xff0ca995))
                   : Text(
                       sender.trim().isEmpty
                           ? '?'
                           : sender.trim()[0].toUpperCase(),
                       style: const TextStyle(
-                        color: Color(0xff3156d8),
+                        color: Color(0xff4c5fe8),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1249,7 +1245,7 @@ class ChatAttachmentCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon,
-                color: sent ? Colors.white : const Color(0xff3156d8), size: 20),
+                color: sent ? Colors.white : const Color(0xff4c5fe8), size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1261,7 +1257,7 @@ class ChatAttachmentCard extends StatelessWidget {
                         ? 'File'
                         : type[0].toUpperCase() + type.substring(1),
                     style: TextStyle(
-                      color: sent ? Colors.white : const Color(0xff3156d8),
+                      color: sent ? Colors.white : const Color(0xff4c5fe8),
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                     )),
@@ -1374,7 +1370,7 @@ class _VoiceMessagePlayerState extends State<VoiceMessagePlayer> {
                   ? Colors.white.withValues(alpha: .2)
                   : const Color(0xffdce8ff),
               foregroundColor:
-                  widget.sent ? Colors.white : const Color(0xff3156d8),
+                  widget.sent ? Colors.white : const Color(0xff4c5fe8),
             ),
             icon:
                 Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
@@ -1395,7 +1391,7 @@ class _VoiceMessagePlayerState extends State<VoiceMessagePlayer> {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 4,
-                    color: widget.sent ? Colors.white : const Color(0xff3156d8),
+                    color: widget.sent ? Colors.white : const Color(0xff4c5fe8),
                     backgroundColor:
                         widget.sent ? Colors.white24 : const Color(0x223156d8),
                   ),

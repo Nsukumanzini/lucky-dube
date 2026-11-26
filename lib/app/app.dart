@@ -133,12 +133,16 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
         useMaterial3: true,
         brightness: b,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff3156d8),
+          seedColor: const Color(0xff4c5fe8),
           brightness: b,
         ).copyWith(
-            primary: const Color(0xff3156d8),
-            secondary: const Color(0xff0d9488),
-            tertiary: const Color(0xffe78353),
+            primary: const Color(0xff4c5fe8),
+            secondary: const Color(0xff0ca995),
+            tertiary: const Color(0xfff08756),
+            error: const Color(0xffdc4268),
+            primaryFixed: const Color(0xffe9eaff),
+            secondaryFixed: const Color(0xffdcf8f1),
+            tertiaryFixed: const Color(0xffffeed6),
             onPrimary: Colors.white,
             surface: b == Brightness.light
                 ? const Color(0xfffdfdff)
@@ -151,14 +155,14 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
                 : const Color(0xff214675)),
         // Give otherwise unstyled Material icons a deliberate accent so the
         // iconography remains colourful and consistent throughout the app.
-        iconTheme: const IconThemeData(color: Color(0xff3156d8)),
-        primaryIconTheme: const IconThemeData(color: Color(0xff3156d8)),
+        iconTheme: const IconThemeData(color: Color(0xff4c5fe8)),
+        primaryIconTheme: const IconThemeData(color: Color(0xff4c5fe8)),
         scaffoldBackgroundColor: Colors.transparent,
         listTileTheme: const ListTileThemeData(
-          iconColor: Color(0xff0d9488),
+          iconColor: Color(0xff0ca995),
         ),
         iconButtonTheme: IconButtonThemeData(
-          style: IconButton.styleFrom(foregroundColor: const Color(0xff0d9488)),
+          style: IconButton.styleFrom(foregroundColor: const Color(0xff0ca995)),
         ),
         cardTheme: CardThemeData(
           elevation: 0,
@@ -177,8 +181,8 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
-          prefixIconColor: const Color(0xff3156d8),
-          suffixIconColor: const Color(0xff0d9488),
+          prefixIconColor: const Color(0xff4c5fe8),
+          suffixIconColor: const Color(0xff0ca995),
           filled: true,
           fillColor: b == Brightness.light
               ? const Color(0xc5f9fbff)
@@ -196,7 +200,7 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xff3156d8), width: 1.5),
+            borderSide: const BorderSide(color: Color(0xff4c5fe8), width: 1.5),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -238,6 +242,16 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
                 : const Color(0xffedf4ff),
             fontWeight: FontWeight.w600,
           ),
+        ),
+        tabBarTheme: TabBarThemeData(
+          dividerColor: Colors.transparent,
+          labelColor: Colors.white,
+          unselectedLabelColor:
+              b == Brightness.light ? const Color(0xff58667f) : Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+          overlayColor: WidgetStateProperty.all(const Color(0x124c5fe8)),
+          indicatorSize: TabBarIndicatorSize.tab,
         ),
         dialogTheme: DialogThemeData(
           backgroundColor: b == Brightness.light
@@ -282,11 +296,11 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             foregroundColor: b == Brightness.light
                 ? const Color(0xff20304a)
                 : const Color(0xffedf4ff),
-            iconTheme: const IconThemeData(color: Color(0xff0d9488))),
+            iconTheme: const IconThemeData(color: Color(0xff0ca995))),
         navigationRailTheme: NavigationRailThemeData(
             backgroundColor: Colors.transparent,
-            selectedIconTheme: const IconThemeData(color: Color(0xff3156d8)),
-            unselectedIconTheme: const IconThemeData(color: Color(0xff0d9488)),
+            selectedIconTheme: const IconThemeData(color: Color(0xff4c5fe8)),
+            unselectedIconTheme: const IconThemeData(color: Color(0xff0ca995)),
             indicatorColor: b == Brightness.light
                 ? const Color(0xffe1eaff)
                 : const Color(0xff214675)),
@@ -297,8 +311,8 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             iconTheme: WidgetStateProperty.resolveWith((states) =>
                 IconThemeData(
                     color: states.contains(WidgetState.selected)
-                        ? const Color(0xff3156d8)
-                        : const Color(0xff0d9488))),
+                        ? const Color(0xff4c5fe8)
+                        : const Color(0xff0ca995))),
             indicatorColor: b == Brightness.light
                 ? const Color(0xffe1eaff)
                 : const Color(0xff214675),

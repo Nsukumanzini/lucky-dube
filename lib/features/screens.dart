@@ -91,25 +91,46 @@ class _PortalState extends ConsumerState<Portal> {
   Future<void> detail(String title, Widget content) =>
       Navigator.of(context).push<void>(MaterialPageRoute(
           builder: (_) => FeaturePage(title: LText(title), content: content)));
-  Widget panel(String title, Widget child, {String? eyebrow}) => FrostedSurface(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (eyebrow != null)
-              LText(
-                eyebrow,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            LText(title, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 18),
-            child,
-          ],
-        ),
-      );
+  Widget panel(String title, Widget child, {String? eyebrow}) {
+    final accent = learnerAccents[
+        title.codeUnits.fold<int>(0, (a, b) => a + b) % learnerAccents.length];
+    return FrostedSurface(
+      padding: const EdgeInsets.all(18),
+      tint: Theme.of(context).brightness == Brightness.light
+          ? Color.lerp(Colors.white, accent, .035)
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (eyebrow != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: LText(eyebrow,
+                  style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w900)),
+            ),
+          Row(children: [
+            AnimatedIconBadge(
+                icon: _sectionIcon(title), color: accent, size: 38),
+            const SizedBox(width: 12),
+            Expanded(
+              child: LText(title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800, height: 1.12)),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
   Widget tile(
     String title,
     String subtitle,
@@ -233,7 +254,7 @@ class _PortalState extends ConsumerState<Portal> {
             child: RefreshIndicator(
               onRefresh: () async {
                 setState(() {});
-                toast('Your offline workspace is up to date');
+                toast('Your learner workspace is up to date');
               },
               child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -433,7 +454,7 @@ class _PortalState extends ConsumerState<Portal> {
                   const SizedBox(height: 16),
                   LText(
                     [
-                      'Explore lessons, original study guides and homework offline.',
+                      'Explore lessons, original study guides and homework at your own pace.',
                       'Follow announcements and school-managed conversations.',
                       'Track your learning, plan your week and bring your creativity to life.',
                     ][onboarding],
@@ -571,23 +592,100 @@ class _PortalState extends ConsumerState<Portal> {
           ),
         ),
       );
-  Widget heading(String title, String subtitle) => Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LText(
-              title,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+  IconData _sectionIcon(String title) {
+    final value = title.toLowerCase();
+    if (value.contains('calendar') || value.contains('week')) {
+      return Icons.calendar_month_rounded;
+    }
+    if (value.contains('message') || value.contains('conversation')) {
+      return Icons.forum_rounded;
+    }
+    if (value.contains('art') ||
+        value.contains('creative') ||
+        value.contains('performance')) {
+      return Icons.palette_rounded;
+    }
+    if (value.contains('progress') ||
+        value.contains('result') ||
+        value.contains('average')) {
+      return Icons.auto_graph_rounded;
+    }
+    if (value.contains('homework') ||
+        value.contains('task') ||
+        value.contains('assignment')) {
+      return Icons.edit_note_rounded;
+    }
+    if (value.contains('attendance')) {
+      return Icons.event_available_rounded;
+    }
+    if (value.contains('subject') ||
+        value.contains('lesson') ||
+        value.contains('learning')) {
+      return Icons.auto_stories_rounded;
+    }
+    if (value.contains('announcement') || value.contains('notice')) {
+      return Icons.campaign_rounded;
+    }
+    if (value.contains('profile')) {
+      return Icons.face_rounded;
+    }
+    if (value.contains('support') || value.contains('help')) {
+      return Icons.favorite_rounded;
+    }
+    return Icons.auto_awesome_rounded;
+  }
+
+  Widget heading(String title, String subtitle) {
+    final accent = learnerAccents[
+        title.codeUnits.fold<int>(0, (a, b) => a + b) % learnerAccents.length];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 22),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final compact = constraints.maxWidth < 460;
+        return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              LText(title,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -.8,
+                      height: 1.1)),
+              const SizedBox(height: 7),
+              LText(subtitle,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.45)),
+            ]),
+          ),
+          SizedBox(width: compact ? 8 : 18),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: .78, end: 1),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 520),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, child) => Transform.scale(
+              scale: scale,
+              child: child,
             ),
-            const SizedBox(height: 8),
-            LText(subtitle, style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
-      );
+            child: Container(
+              width: compact ? 54 : 68,
+              height: compact ? 54 : 68,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: accent.withValues(alpha: .2)),
+              ),
+              child: Icon(_sectionIcon(title),
+                  color: accent, size: compact ? 27 : 34),
+            ),
+          ),
+        ]);
+      }),
+    );
+  }
+
   Widget content() {
     switch (widget.page) {
       case 'home':
@@ -860,24 +958,8 @@ class _PortalState extends ConsumerState<Portal> {
             const SizedBox(height: 18),
             LText(item.body),
           ] else if (item.type == 'Slides') ...[
-            for (final entry in item.body.split('\n\n').indexed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: LiquidGlassSurface(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedIconBadge(
-                        icon: Icons.auto_awesome_rounded,
-                        color: learnerAccents[entry.$1 % learnerAccents.length],
-                        size: 38,
-                      ),
-                      const SizedBox(height: 10),
-                      LText(entry.$2, style: const TextStyle(height: 1.65)),
-                    ],
-                  ),
-                ),
-              ),
+            InteractiveSlideDeck(
+                slides: item.body.split('\n\n'), subject: item.subject),
           ] else
             LiquidGlassSurface(
               child: LText(item.body,
@@ -1214,13 +1296,14 @@ class _PortalState extends ConsumerState<Portal> {
           ),
           tile(
             'Explain an absence',
-            'Private request • Saved on this device; not delivered',
+            'A private note saved on this device',
             Icons.edit_note,
             () async {
               final text = await input('Absence explanation');
               if (text != null) {
                 r.put('absence', text);
-                toast('Saved locally • Awaiting simulated staff review');
+                toast(
+                    'Your note is saved on this device and has not been sent for review.');
               }
             },
           ),
@@ -1503,7 +1586,7 @@ class _PortalState extends ConsumerState<Portal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        heading('Notifications', 'Local in-app updates'),
+        heading('Notifications', 'Updates from your learning workspace'),
         TextButton(
           onPressed: () => r.put('notificationsRead', true),
           child: const LText('Mark all as read'),
@@ -1672,7 +1755,7 @@ class _PortalState extends ConsumerState<Portal> {
           ),
           for (final q in [
             'How do I sign in?',
-            'Can I learn offline?',
+            'Where can I find saved learning content?',
             'How do I submit homework?',
             'Who can read my portfolio?',
           ])
@@ -1685,8 +1768,8 @@ class _PortalState extends ConsumerState<Portal> {
                     {
                       'How do I sign in?':
                           'Use your provided learner number and Learn123!; no self-registration is available.',
-                      'Can I learn offline?':
-                          'Learning guides and resources are available on this device.',
+                      'Where can I find saved learning content?':
+                          'Open Resources to browse your learning guides and saved materials.',
                       'How do I submit homework?':
                           'Open Homework, select a task, enter your response and submit. Drafts stay on this device.',
                       'Who can read my portfolio?':
@@ -1697,7 +1780,7 @@ class _PortalState extends ConsumerState<Portal> {
               ],
             ),
           panel(
-            'Report a concern • Private simulation',
+            'Report a concern privately',
             Column(
               children: [
                 for (final cat in [
@@ -1710,7 +1793,7 @@ class _PortalState extends ConsumerState<Portal> {
                 ])
                   tile(
                     cat,
-                    'Save a private simulated support request',
+                    'Write a private concern note',
                     Icons.support_agent,
                     () async {
                       final body = await input(

@@ -21,7 +21,23 @@ class FeaturePage extends StatelessWidget {
         appBar: AppBar(
             toolbarHeight: MediaQuery.sizeOf(context).width < 600 ? 60 : 68,
             flexibleSpace: const LiquidGlassBar(),
-            title: title,
+            title: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: .11),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(Icons.auto_awesome_rounded,
+                    size: 19, color: Theme.of(context).colorScheme.primary),
+              ),
+              const SizedBox(width: 10),
+              Flexible(child: title),
+            ]),
             leading: BackButton(onPressed: () {
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();

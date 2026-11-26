@@ -19,8 +19,8 @@ class SchoolConfiguration {
     this.languages = const ['en', 'zu'],
     this.contact = 'Application support',
     this.logoAsset = 'assets/icon.svg',
-    this.primaryColor = 0xff3156d8,
-    this.secondaryColor = 0xff0d9488,
+    this.primaryColor = 0xff4c5fe8,
+    this.secondaryColor = 0xff0ca995,
     this.grades = const [8, 9, 10],
     this.terms = const ['Term 1', 'Term 2', 'Term 3', 'Term 4'],
     this.modules = const [
