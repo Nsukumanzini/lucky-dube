@@ -111,7 +111,7 @@ class _LuckyAppState extends ConsumerState<LuckyApp> {
             ),
             if (!const ['/splash', '/study-assistant']
                 .contains(router.routeInformationProvider.value.uri.path))
-              const FloatingStudyAssistant(),
+              const Positioned.fill(child: FloatingStudyAssistant()),
           ],
         ),
       ),

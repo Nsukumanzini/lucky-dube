@@ -47,69 +47,62 @@ class _FloatingStudyAssistantState
         proposed.dy.clamp(8.0, maxTop).toDouble(),
       );
 
-      return Positioned.fill(
-        child: LayoutBuilder(
-            builder: (context, _) => Stack(children: [
-                  Positioned(
-                    left: current.dx,
-                    top: current.dy,
-                    child: Semantics(
-                      button: true,
-                      label:
-                          tr(context, 'Open AI Study Assistant. Drag to move.'),
-                      child: GestureDetector(
-                        onTap: () => context.push('/study-assistant'),
-                        onPanUpdate: (details) => setState(() {
-                          draggedPosition = Offset(
-                            (current.dx + details.delta.dx)
-                                .clamp(8.0, maxLeft)
-                                .toDouble(),
-                            (current.dy + details.delta.dy)
-                                .clamp(8.0, maxTop)
-                                .toDouble(),
-                          );
-                        }),
-                        onPanEnd: (_) {
-                          final position = draggedPosition ?? current;
-                          repository.put('studyAssistantPosition', {
-                            'x': position.dx,
-                            'y': position.dy,
-                          });
-                        },
-                        child: Tooltip(
-                          message:
-                              tr(context, 'Ask a question about your lessons'),
-                          child: Container(
-                            width: size,
-                            height: size,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Color(0xff596cf2), Color(0xff3274e9)],
-                              ),
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x453252b5),
-                                  blurRadius: 22,
-                                  offset: Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.auto_awesome_rounded,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                        ),
-                      ),
+      return Stack(children: [
+        Positioned(
+          left: current.dx,
+          top: current.dy,
+          child: Semantics(
+            button: true,
+            label: tr(context, 'Open AI Study Assistant. Drag to move.'),
+            child: GestureDetector(
+              onTap: () => context.push('/study-assistant'),
+              onPanUpdate: (details) => setState(() {
+                draggedPosition = Offset(
+                  (current.dx + details.delta.dx)
+                      .clamp(8.0, maxLeft)
+                      .toDouble(),
+                  (current.dy + details.delta.dy).clamp(8.0, maxTop).toDouble(),
+                );
+              }),
+              onPanEnd: (_) {
+                final position = draggedPosition ?? current;
+                repository.put('studyAssistantPosition', {
+                  'x': position.dx,
+                  'y': position.dy,
+                });
+              },
+              child: Tooltip(
+                message: tr(context, 'Ask a question about your lessons'),
+                child: Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xff596cf2), Color(0xff3274e9)],
                     ),
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x453252b5),
+                        blurRadius: 22,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ])),
-      );
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ]);
     });
   }
 }
